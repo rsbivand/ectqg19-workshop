@@ -12,7 +12,7 @@ Core coverage
 
 - Provide an up to date overview of spatial data representation in Python and R 
 
-- Provide an introduction to software for static and interactivre visualization, especially maps in Python and R
+- Provide an introduction to software for static and interactive visualization, especially maps in Python and R
 
 - Provide an introduction to the R **reticulate** package for running Python from R
 
