@@ -1,0 +1,69 @@
+---
+title: "R: Data structures"
+author: "Roger Bivand"
+date: "Thursday, 5 September 2019, 09:45-10:15"
+output: 
+  html_document:
+    keep_md: true
+bibliography: rmd.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### Required current contributed CRAN packages:
+
+I am running R 3.6.1, with recent `update.packages()`.
+
+```{r, echo=TRUE}
+needed <- c("sf", "stars", "raster", "sp", "rgdal", "rgeos")
+```
+
+# Spatial vector data
+
+## New style
+
+```{r, echo=TRUE}
+library(sf)
+```
+
+```{r, echo=TRUE}
+bh <- st_read("../data/bh.gpkg", stringsAsFactors=FALSE)
+```
+
+
+```{r, echo=TRUE}
+str(bh, max.level=2)
+```
+
+## Old style
+
+```{r, echo=TRUE}
+library(rgdal)
+```
+
+```{r, echo=TRUE}
+bh_old <- readOGR("../data/bh.gpkg", stringsAsFactors=FALSE)
+```
+
+
+```{r, echo=TRUE}
+summary(bh_old)
+```
+
+
+
+```{r, echo=TRUE}
+bh_old <- readOGR("../data/bh.gpkg", integer64="warn.loss", stringsAsFactors=FALSE)
+```
+
+```{r, echo=TRUE}
+summary(bh_old)
+```
+
+
+```{r, echo=TRUE}
+str(bh_old, max.level=2)
+```
