@@ -21,22 +21,144 @@ I am running R 3.6.1, with recent `update.packages()`.
 needed <- c("sf", "stars", "raster", "sp", "rgdal", "rgeos")
 ```
 
-# Spatial vector data
+## New style spatial vector data
 
-## New style
+### The **sf** package
+
+The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs (**rgdal** does too, but requires more from the user).
+
 
 ```{r, echo=TRUE}
 library(sf)
 ```
 
+The `st_read()` method, here for a `"character"` first object giving the file name and path, uses GDAL through **Rcpp** to identify the driver required, and to use it to read the feature geometries and fields. The character string fields are not converted to `"factor"` representation, as they are not categorical variables:
+
 ```{r, echo=TRUE}
 bh <- st_read("../data/bh.gpkg", stringsAsFactors=FALSE)
 ```
 
+Package **sf** provides handling of feature data, where feature
+geometries are points, lines, polygons or combinations of those.
+It implements the full set of geometric functions described in the
+_simple feature access_ standard, and some. The basic storage is
+very simple, and uses only base R types (list, matrix).
+
+* feature sets are held as records (rows) in `"sf"` objects, inheriting from `"data.frame"`
+* `"sf"` objects have at least one simple feature geometry list-column of class `"sfc"`
+* geometry list-columns are *sticky*, that is they stay stuck to the object when subsetting columns, for example using `[`
+* `"sfc"` geometry list-columns have a bounding box and a coordinate reference system as attribute, and a class attribute pointing out the common type (or `"GEOMETRY"` in case of a mix)
+* a single simple feature geometry is of class `"sfg"`, and further classes pointing out dimension and type
+
+Storage of simple feature geometry:
+
+* `"POINT"` is a numeric vector
+* `"LINESTRING"` and `"MULTIPOINT"` are numeric matrix, points/vertices in rows
+* `"POLYGON"` and `"MULTILINESTRING"` are lists of matrices
+* `"MULTIPOLYGON"` is a lists of those
+* `"GEOMETRYCOLLECTION"` is a list of typed geometries
+
+
 
 ```{r, echo=TRUE}
-str(bh, max.level=2)
+class(bh)
 ```
+
+The columns of the `"data.frame"` object have these names:
+
+```{r, echo=TRUE}
+names(bh)
+```
+
+Two of the attributes of the object are those all `"data.frame"` objects possess: `names` shown above and `row.names`. The fourth, `sf_column` gives the name of the active geometry column.
+
+```{r, echo=TRUE}
+names(attributes(bh))
+```
+
+
+The `$` access operator lets us operate on a single column of the object as with any other `"data.frame"` object:
+
+```{r, echo=TRUE}
+hist(bh$Average.Monthly.Wage)
+```
+
+Using the attribute value to extract the name of the geometry column, and the `[[` access operator to give programmatic access to a column by name, we can see that the `"sfc"` object is composed of `POLYGON` objects:
+
+```{r, echo=TRUE}
+class(bh[[attr(bh, "sf_column")]])
+```
+
+The geometry column is a list column, of the same length as the other columns in the `"data.frame"` object.
+
+```{r, echo=TRUE}
+is.list(bh[[attr(bh, "sf_column")]])
+```
+
+The object attributes are also a list; lists are used a lot in R object structures:
+
+```{r, echo=TRUE}
+is.list(attributes(bh))
+```
+
+Lists are vectors too:
+
+```{r, echo=TRUE}
+is.vector(attributes(bh))
+```
+
+`"sf"` objects may be subsetted by row and column in the same way as regular `"data.frame"` objects, with the implicit understanding that the geometry column is _sticky_; here we choose only the first column, but the geometry column follows along, _stuck_ to the subsetted object, and obviously subsetted by row too.
+
+
+```{r, echo=TRUE}
+class(bh[1:5, 1])
+```
+
+Geometry columns have their own list of attributes, the count of empty geometries, the coordinate reference system, the precision and the bounding box (subsetting will refresh the bounding box; transformation will update the coordinate reference system and the bounding box):
+
+```{r, echo=TRUE}
+attributes(bh[[attr(bh, "sf_column")]])
+```
+
+```{r, echo=TRUE}
+class(attr(bh[[attr(bh, "sf_column")]], "crs"))
+```
+
+```{r, echo=TRUE}
+str(attr(bh[[attr(bh, "sf_column")]], "crs"))
+```
+
+
+```{r, echo=TRUE}
+st_crs(4674)
+```
+
+```{r, echo=TRUE}
+st_crs(31983)
+```
+
+```{r, echo=TRUE}
+class(bh[[attr(bh, "sf_column")]][[1]])
+```
+
+
+```{r, echo=TRUE}
+str(bh[[attr(bh, "sf_column")]][[1]][[1]])
+```
+
+
+```{r, echo=TRUE}
+is.matrix(bh[[attr(bh, "sf_column")]][[1]][[1]])
+```
+
+```{r, echo=TRUE}
+attributes(bh[[attr(bh, "sf_column")]][[1]][[1]])
+```
+
+```{r, echo=TRUE}
+length(bh[[attr(bh, "sf_column")]][[1]][[1]])
+```
+
 
 ## Old style
 
@@ -66,4 +188,34 @@ summary(bh_old)
 
 ```{r, echo=TRUE}
 str(bh_old, max.level=2)
+```
+
+
+```{r, echo=TRUE}
+class(bh_old)
+```
+
+
+```{r, echo=TRUE}
+class(slot(bh_old, "data"))
+```
+
+
+```{r, echo=TRUE}
+hist(bh_old$Average.Monthly.Wage)
+```
+
+
+```{r, echo=TRUE}
+class(slot(bh_old, "polygons"))
+```
+
+
+```{r, echo=TRUE}
+class(slot(bh_old, "proj4string"))
+```
+
+
+```{r, echo=TRUE}
+class(bh_old[1:5, 1])
 ```
