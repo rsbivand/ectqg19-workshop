@@ -21,11 +21,238 @@ I am running R 3.6.1, with recent `update.packages()`.
 needed <- c("sf", "stars", "raster", "sp", "rgdal", "rgeos")
 ```
 
-## New style spatial vector data
+## Vectors, matrices and `data.frames`
+
+### Simple vectors
+
+In R, scalars are vectors of unit length, so most data are vectors or combinations of vectors. The printed results are prepended by a curious `[1]`; all these results are unit length vectors. We can combine several objects with `c()`:
+
+```{r vect1, echo = TRUE}
+a <- c(2, 3)
+a
+sum(a)
+str(a)
+aa <- rep(a, 50)
+aa
+```
+
+The single square brackets `[]` are used to access or set elements of vectors (the colon `:` gives an integer sequence); negative indices drop elements:
+
+```{r vect2, echo = TRUE}
+length(aa)
+aa[1:10]
+sum(aa)
+sum(aa[1:10])
+sum(aa[-(11:length(aa))])
+```
+
+### Arithmetic under the hood
+
+Infix syntax is just a representation of the actual underlying forms
+
+```{r vect2a, echo = TRUE}
+a[1] + a[2]
+sum(a)
+`+`(a[1], a[2])
+Reduce(`+`, a)
+```
+
+We've done arithmetic on scalars, we can do vector-scalar arithmetic:
+
+```{r vect3, echo = TRUE}
+sum(aa)
+sum(aa+2)
+sum(aa)+2
+sum(aa*2)
+sum(aa)*2
+```
+
+But vector-vector arithmetic poses the question of vector length and recycling (the shorter one gets recycled):
+
+
+```{r vect4, echo = TRUE}
+v5 <- 1:5
+v2 <- c(5, 10)
+v5 * v2
+v2_stretch <- rep(v2, length.out=length(v5))
+v2_stretch
+v5 * v2_stretch
+```
+
+In working with real data, we often meet missing values, coded by NA meaning Not Available:
+
+```{r NA, echo = TRUE}
+anyNA(aa)
+is.na(aa) <- 5
+aa[1:10]
+anyNA(aa)
+sum(aa)
+sum(aa, na.rm=TRUE)
+```
+
+### Checking data
+
+
+One way to check our input data is to print in the console --- this works with small objects as we've seen, but for larger objects we need methods:
+
+
+```{r check1, echo = TRUE}
+big <- 1:(10^5)
+length(big)
+head(big)
+str(big)
+summary(big)
+```
+
+### Basic vector types
+
+There are `length`, `head`, `str` (*str*ucture) and `summary` methods for many types of objects. `str` also gives us a hint of the type of object and its dimensions. We've seen a couple of uses of `str` so far, `str(a)` was `num` and `str(big)` was `int`, what does this signify? They are both numbers, but of different types.
+
+There are six basic vector types: list, integer, double, logical, character and [complex](http://www.johnmyleswhite.com/notebook/2009/12/18/using-complex-numbers-in-r/). The derived type factor (to which we return shortly) is integer with extra information. `str` reports these as int, num, logi, chr and cplx, and lists are enumerated recursively. In RStudio you see more or less the `str` output in the environment pane as Values in the list view; the grid view adds the object size in memory. From early S, we have `typeof` and `storage.mode` (including single precision, not used in R) --- these are important for interfacing C, C++, Fortran and other languages. Beyond this is `class`, but then the different class systems (S3 and formal S4) complicate things. Objects such as vectors may also have attributes in which their class and other information may be placed. Typically, a lot of use is made of attributes to squirrel away strings and short vectors. 
+
+`is` methods are used to test types of objects; note that integers are also seen as numeric:
+
+```{r coerce1, echo = TRUE}
+set.seed(1)
+x <- runif(50, 1, 10)
+is.numeric(x)
+y <- rpois(50, lambda=6)
+is.numeric(y)
+is.integer(y)
+xy <- x < y
+is.logical(xy)
+```
+
+`as` methods try to convert between object types and are widely used:
+
+```{r coerce2, echo = TRUE}
+str(as.integer(xy))
+str(as.numeric(y))
+str(as.character(y))
+str(as.integer(x))
+```
+
+### The data frame object
+
+First, let us see that is behind the `data.frame` object: the `list` object. `list` objects are vectors that contain other objects, which can be addressed by name or by 1-based indices. Like the vectors we have already met, lists can be  accessed and manipulated using square brackets `[]`. Single list elements can be accessed and manipulated using double square brackets `[[]]`. 
+
+### List objects
+
+Starting with four vectors of differing types, we can assemble a list object; as we see, its structure is quite simple. The vectors in the list may vary in length, and lists can (and do often) include lists
+
+```{r , echo = TRUE}
+V1 <- 1:3
+V2 <- letters[1:3]
+V3 <- sqrt(V1)
+V4 <- sqrt(as.complex(-V1))
+L <- list(v1=V1, v2=V2, v3=V3, v4=V4)
+str(L)
+L$v3[2]
+L[[3]][2]
+```
+
+### Data Frames
+
+Our `list` object contains four vectors of different types but of the same length; conversion to a `data.frame` is convenient. Note that by default strings are converted into factors:
+
+```{r , echo = TRUE}
+DF <- as.data.frame(L)
+str(DF)
+DF <- as.data.frame(L, stringsAsFactors=FALSE)
+str(DF)
+```
+
+We can also provoke an error in conversion from a valid `list` made up of vectors of different length to a `data.frame`:
+
+
+```{r , echo = TRUE}
+V2a <- letters[1:4]
+V4a <- factor(V2a)
+La <- list(v1=V1, v2=V2a, v3=V3, v4=V4a)
+DFa <- try(as.data.frame(La, stringsAsFactors=FALSE), silent=TRUE)
+message(DFa)
+```
+
+We can access `data.frame` elements as `list` elements, where the `$` is effectively the same as `[[]]` with the list component name as a string:
+
+```{r , echo = TRUE}
+DF$v3[2]
+DF[[3]][2]
+DF[["v3"]][2]
+```
+
+Since a `data.frame` is a rectangular object with named columns with equal numbers of rows, it can also be indexed like a matrix, where the rows are the first index and the columns (variables) the second:
+
+
+```{r , echo = TRUE}
+DF[2, 3]
+DF[2, "v3"]
+str(DF[2, 3])
+str(DF[2, 3, drop=FALSE])
+```
+
+If we coerce a `data.frame` containing a character vector or factor into a matrix, we get a character matrix; if we extract an integer and a numeric column, we get a numeric matrix.
+
+```{r , echo = TRUE}
+as.matrix(DF)
+as.matrix(DF[,c(1,3)])
+```
+
+The fact that `data.frame` objects descend from `list` objects is shown by looking at their lengths; the length of a matrix is not its number of columns, but its element count:
+
+```{r , echo = TRUE}
+length(L)
+length(DF)
+length(as.matrix(DF))
+```
+
+There are `dim` methods for `data.frame` objects and matrices (and arrays with more than two dimensions); matrices and arrays are seen as vectors with dimensions; `list` objects have no dimensions:
+
+
+```{r , echo = TRUE}
+dim(L)
+dim(DF)
+dim(as.matrix(DF))
+```
+
+```{r , echo = TRUE}
+str(as.matrix(DF))
+```
+
+`data.frame` objects have `names` and `row.names`, matrices have `dimnames`, `colnames` and `rownames`; all can be used for setting new values:
+
+```{r , echo = TRUE}
+row.names(DF)
+names(DF)
+names(DF) <- LETTERS[1:4]
+names(DF)
+str(dimnames(as.matrix(DF)))
+```
+
+R objects have attributes that are not normally displayed, but which show their structure and class (if any); we can see that `data.frame` objects are quite different internally from matrices:
+
+
+```{r , echo = TRUE}
+str(attributes(DF))
+str(attributes(as.matrix(DF)))
+```
+
+If the reason for different vector lengths was that one or more observations are missing on that variable, `NA` should be used; the lengths are then equal, and a rectangular table can be created:
+
+```{r , echo = TRUE}
+V1a <- c(V1, NA)
+V3a <- sqrt(V1a)
+La <- list(v1=V1a, v2=V2a, v3=V3a, v4=V4a)
+DFa <- as.data.frame(La, stringsAsFactors=FALSE)
+str(DFa)
+```
+
+
+## New style spatial vector representation
 
 ### The **sf** package
 
-The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs (**rgdal** does too, but requires more from the user).
+The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geogompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
 
 
 ```{r, echo=TRUE}
@@ -59,7 +286,6 @@ Storage of simple feature geometry:
 * `"GEOMETRYCOLLECTION"` is a list of typed geometries
 
 
-
 ```{r, echo=TRUE}
 class(bh)
 ```
@@ -75,7 +301,6 @@ Two of the attributes of the object are those all `"data.frame"` objects possess
 ```{r, echo=TRUE}
 names(attributes(bh))
 ```
-
 
 The `$` access operator lets us operate on a single column of the object as with any other `"data.frame"` object:
 
@@ -95,18 +320,6 @@ The geometry column is a list column, of the same length as the other columns in
 is.list(bh[[attr(bh, "sf_column")]])
 ```
 
-The object attributes are also a list; lists are used a lot in R object structures:
-
-```{r, echo=TRUE}
-is.list(attributes(bh))
-```
-
-Lists are vectors too:
-
-```{r, echo=TRUE}
-is.vector(attributes(bh))
-```
-
 `"sf"` objects may be subsetted by row and column in the same way as regular `"data.frame"` objects, with the implicit understanding that the geometry column is _sticky_; here we choose only the first column, but the geometry column follows along, _stuck_ to the subsetted object, and obviously subsetted by row too.
 
 
@@ -119,15 +332,19 @@ Geometry columns have their own list of attributes, the count of empty geometrie
 ```{r, echo=TRUE}
 attributes(bh[[attr(bh, "sf_column")]])
 ```
+The coordinate reference system is an object of class `"crs"`:
 
 ```{r, echo=TRUE}
 class(attr(bh[[attr(bh, "sf_column")]], "crs"))
 ```
 
+It contains an integer EPSG code (so far not compound codes), and a PROJ string:
+
 ```{r, echo=TRUE}
 str(attr(bh[[attr(bh, "sf_column")]], "crs"))
 ```
 
+Objects of this class can be instantiated for example by giving the relevant EPSG code:
 
 ```{r, echo=TRUE}
 st_crs(4674)
@@ -137,44 +354,20 @@ st_crs(4674)
 st_crs(31983)
 ```
 
+We can drill down to the first feature geometry `"sfg"` object, which is a matrix with a class attribute - a vector of three elements, `"XY"` for two dimensions, `"POLYGON"` for the simple features definition, and `"sfg"` as the container class:
+
 ```{r, echo=TRUE}
-class(bh[[attr(bh, "sf_column")]][[1]])
+str(bh[[attr(bh, "sf_column")]][[1]])
 ```
 
 
-```{r, echo=TRUE}
-str(bh[[attr(bh, "sf_column")]][[1]][[1]])
-```
+## Old style spatial vector representation
 
-
-```{r, echo=TRUE}
-is.matrix(bh[[attr(bh, "sf_column")]][[1]][[1]])
-```
-
-```{r, echo=TRUE}
-attributes(bh[[attr(bh, "sf_column")]][[1]][[1]])
-```
-
-```{r, echo=TRUE}
-length(bh[[attr(bh, "sf_column")]][[1]][[1]])
-```
-
-
-## Old style
+[@pebesma+bivand:05], [@asdar]
 
 ```{r, echo=TRUE}
 library(rgdal)
 ```
-
-```{r, echo=TRUE}
-bh_old <- readOGR("../data/bh.gpkg", stringsAsFactors=FALSE)
-```
-
-
-```{r, echo=TRUE}
-summary(bh_old)
-```
-
 
 
 ```{r, echo=TRUE}
