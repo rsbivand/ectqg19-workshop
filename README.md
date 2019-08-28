@@ -14,19 +14,14 @@ Core coverage
 
 - Provide an introduction to software for static and interactive visualization, especially maps in Python and R
 
-- Provide an introduction to the R **reticulate** package for running Python from R
 
 ### Aims (afternoon)
 
-Selections of (to be supplemented)
-
 - Provide an overview of tools for exploratory spatial data analysis in Python and R 
 
-- Provide an overview of tools for spatial regression in Python and R - maximum likelihood, GMM, Bayesian 
+- Provide an overview of tools for spatial regression in Python and R  
 
-- Provide an overview of tools for spatial multilevel modelling in Python and R
-
-- Provide an overview of tools for network modelling in Python and R
+- Provide an overview of tools interoperability between Python and R, including the R **reticulate** package for running Python from R
 
 
 ### Target audience
