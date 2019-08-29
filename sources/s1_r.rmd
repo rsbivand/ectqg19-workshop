@@ -262,7 +262,7 @@ library(sf)
 The `st_read()` method, here for a `"character"` first object giving the file name and path, uses GDAL through **Rcpp** to identify the driver required, and to use it to read the feature geometries and fields. The character string fields are not converted to `"factor"` representation, as they are not categorical variables:
 
 ```{r, echo=TRUE}
-bh <- st_read("../data/bh.gpkg", stringsAsFactors=FALSE)
+lux <- st_read("../data/lux_regions.gpkg", stringsAsFactors=FALSE)
 ```
 
 Package **sf** provides handling of feature data, where feature
@@ -287,61 +287,61 @@ Storage of simple feature geometry:
 
 
 ```{r, echo=TRUE}
-class(bh)
+class(lux)
 ```
 
 The columns of the `"data.frame"` object have these names:
 
 ```{r, echo=TRUE}
-names(bh)
+names(lux)
 ```
 
 Two of the attributes of the object are those all `"data.frame"` objects possess: `names` shown above and `row.names`. The fourth, `sf_column` gives the name of the active geometry column.
 
 ```{r, echo=TRUE}
-names(attributes(bh))
+names(attributes(lux))
 ```
 
 The `$` access operator lets us operate on a single column of the object as with any other `"data.frame"` object:
 
 ```{r, echo=TRUE}
-hist(bh$Average.Monthly.Wage)
+hist(lux$ghsl_pop)
 ```
 
 Using the attribute value to extract the name of the geometry column, and the `[[` access operator to give programmatic access to a column by name, we can see that the `"sfc"` object is composed of `POLYGON` objects:
 
 ```{r, echo=TRUE}
-class(bh[[attr(bh, "sf_column")]])
+class(lux[[attr(lux, "sf_column")]])
 ```
 
 The geometry column is a list column, of the same length as the other columns in the `"data.frame"` object.
 
 ```{r, echo=TRUE}
-is.list(bh[[attr(bh, "sf_column")]])
+is.list(lux[[attr(lux, "sf_column")]])
 ```
 
 `"sf"` objects may be subsetted by row and column in the same way as regular `"data.frame"` objects, with the implicit understanding that the geometry column is _sticky_; here we choose only the first column, but the geometry column follows along, _stuck_ to the subsetted object, and obviously subsetted by row too.
 
 
 ```{r, echo=TRUE}
-class(bh[1:5, 1])
+class(lux[1:5, 1])
 ```
 
 Geometry columns have their own list of attributes, the count of empty geometries, the coordinate reference system, the precision and the bounding box (subsetting will refresh the bounding box; transformation will update the coordinate reference system and the bounding box):
 
 ```{r, echo=TRUE}
-attributes(bh[[attr(bh, "sf_column")]])
+attributes(lux[[attr(lux, "sf_column")]])
 ```
 The coordinate reference system is an object of class `"crs"`:
 
 ```{r, echo=TRUE}
-class(attr(bh[[attr(bh, "sf_column")]], "crs"))
+class(attr(lux[[attr(lux, "sf_column")]], "crs"))
 ```
 
 It contains an integer EPSG code (so far not compound codes), and a PROJ string:
 
 ```{r, echo=TRUE}
-str(attr(bh[[attr(bh, "sf_column")]], "crs"))
+str(attr(lux[[attr(lux, "sf_column")]], "crs"))
 ```
 
 Objects of this class can be instantiated for example by giving the relevant EPSG code:
@@ -357,58 +357,31 @@ st_crs(31983)
 We can drill down to the first feature geometry `"sfg"` object, which is a matrix with a class attribute - a vector of three elements, `"XY"` for two dimensions, `"POLYGON"` for the simple features definition, and `"sfg"` as the container class:
 
 ```{r, echo=TRUE}
-str(bh[[attr(bh, "sf_column")]][[1]])
+str(lux[[attr(lux, "sf_column")]][[1]])
 ```
 
 
-## Old style spatial vector representation
-
-[@pebesma+bivand:05], [@asdar]
+https://data.public.lu/en/datasets/population-per-municipality/
 
 ```{r, echo=TRUE}
-library(rgdal)
-```
-
-
-```{r, echo=TRUE}
-bh_old <- readOGR("../data/bh.gpkg", integer64="warn.loss", stringsAsFactors=FALSE)
+pop <- st_read("../data/statec_population_by_municipality.geojson")
 ```
 
 ```{r, echo=TRUE}
-summary(bh_old)
+all.equal(pop$POPULATION, lux$POPULATION)
+o <- match(as.character(pop$LAU2), as.character(lux$LAU2))
+all.equal(pop$POPULATION, lux$POPULATION[o])
 ```
 
+https://data.public.lu/en/datasets/remarkable-trees/
 
 ```{r, echo=TRUE}
-str(bh_old, max.level=2)
+trees <- st_read("../data/trees/anf_remarkable_trees_0.shp")
 ```
-
 
 ```{r, echo=TRUE}
-class(bh_old)
+area_sph <- lwgeom::st_geod_area(lux)
+area_tmerc <- st_area(st_transform(lux, 2169))
 ```
 
 
-```{r, echo=TRUE}
-class(slot(bh_old, "data"))
-```
-
-
-```{r, echo=TRUE}
-hist(bh_old$Average.Monthly.Wage)
-```
-
-
-```{r, echo=TRUE}
-class(slot(bh_old, "polygons"))
-```
-
-
-```{r, echo=TRUE}
-class(slot(bh_old, "proj4string"))
-```
-
-
-```{r, echo=TRUE}
-class(bh_old[1:5, 1])
-```

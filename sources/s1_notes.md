@@ -1,7 +1,7 @@
 ---
 title: "R: Data structures"
 author: "Roger Bivand and Daniel Arribas-Bel"
-date: "Thursday, 5 September 2019, 09:45-10:15"
+date: "Thursday, 5 September 2019, 09:30-10:45"
 output: 
   html_document:
 bibliography: rmd.bib
