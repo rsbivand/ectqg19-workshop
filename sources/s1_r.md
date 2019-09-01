@@ -1328,6 +1328,8 @@ API point of view, this means that getCoordinateReferenceSystem()
 method in Geometry objects (for instance) needs to be replaced by a
 getCoordinateMetadata() method.
 
+Maybe watch Even Roualt's recent FOSS4G talk: https://media.ccc.de/v/bucharest-198-revamp-of-coordinate-reference-system-management-in-the-osgeo-c-c-stack-with-proj-and-gdal
+
 The `projinfo` utility is available with the external PROJ library, so most likely not in general; this is for PROJ 6.1.1 (current as of writing):
 
 
@@ -1529,7 +1531,7 @@ system.time(ghsl0 <- read_stars("../data/ghsl.tiff", proxy=FALSE))
 
 ```
 ##    user  system elapsed 
-##   0.004   0.001   0.006
+##   0.004   0.002   0.006
 ```
 
 ```r
@@ -1562,7 +1564,7 @@ system.time(ghsl1 <- read_stars("../data/ghsl.tiff", proxy=TRUE))
 
 ```
 ##    user  system elapsed 
-##   0.003   0.000   0.004
+##   0.003   0.000   0.003
 ```
 
 ```r
@@ -1596,7 +1598,7 @@ system.time(ghsl_sum0 <- aggregate(st_warp(ghsl0, crs=2169, cellsize=250, use_gd
 
 ```
 ##    user  system elapsed 
-##   0.766   0.023   0.791
+##   0.813   0.027   0.864
 ```
 
 Using the proxy in this case takes about the same time:
@@ -1608,7 +1610,7 @@ system.time(ghsl_sum1 <- aggregate(st_warp(ghsl1, crs=2169, cellsize=250, use_gd
 
 ```
 ##    user  system elapsed 
-##   0.680   0.009   0.691
+##   0.715   0.008   0.745
 ```
 
 
@@ -1618,7 +1620,7 @@ system.time(ghsl_sum2 <- aggregate(ghsl0, st_transform(lux, crs=st_crs(ghsl0)$pr
 
 ```
 ##    user  system elapsed 
-##   0.532   0.003   0.537
+##   0.554   0.008   0.575
 ```
 
 The output values following warping are closely aligned with, but differ a little from those included in the vector object read to begin with; it looks as though the vector object was transformed to match the raster before aggregation:

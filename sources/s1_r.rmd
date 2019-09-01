@@ -489,6 +489,8 @@ API point of view, this means that getCoordinateReferenceSystem()
 method in Geometry objects (for instance) needs to be replaced by a
 getCoordinateMetadata() method.
 
+Maybe watch Even Roualt's recent FOSS4G talk: https://media.ccc.de/v/bucharest-198-revamp-of-coordinate-reference-system-management-in-the-osgeo-c-c-stack-with-proj-and-gdal
+
 The `projinfo` utility is available with the external PROJ library, so most likely not in general; this is for PROJ 6.1.1 (current as of writing):
 
 ```{r, echo=TRUE}
