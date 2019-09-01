@@ -1,7 +1,7 @@
 ---
-title: "R: Data structures"
+title: "Data structures"
 author: "Roger Bivand and Daniel Arribas-Bel"
-date: "Thursday, 5 September 2019, 09:30-10:45"
+date: "Thursday, 5 September 2019, 09:30-09:45"
 output: 
   html_document:
 bibliography: rmd.bib
@@ -59,7 +59,7 @@ Typically, user-facing workflows used an ambiguous WGS84 hub, so projection from
 ### PROJ & WKT2
 
 With ISO standardization, PROJ needed to advance, abandoning hub transformation, `+datum=` and `+towgs84=` key values, and switching to an SQLite database for EPSG records. Coordinate metadata will also need an epoch (at which time do the definitions apply, maybe when were the observations made in that CRS) and a region of application. Transformation will need (much) more user intervention to specify the transformation path. **sf** used GDAL for transformation, but GDAL from version 3 uses PROJ 6 directly, and may run into trouble if grids are absent. Many grids are not (yet) open access, or provided on open licenses from PROJ.
-
+  
 
 
 
