@@ -1032,6 +1032,8 @@ plot(lux[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
 
 ![](s1_r_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
 
+The area is in square meters, so we can use facilities in **units** to change to square kilometers to calculate population densities:
+
 
 ```r
 units(lux$area)
@@ -1087,7 +1089,7 @@ summary(lux$ghsl_den)
 ##   32.91   71.10  136.68  268.31  284.85 2088.24
 ```
 
-We can do the same checks with the tree counts:
+We can do the same kinds of sourcing checks with the tree counts:
 
 
 ```r
@@ -1100,6 +1102,7 @@ all.equal(trees_cnt, lux$tree_count)
 ## [1] TRUE
 ```
 
+But we are not ready to move on yet.
 
 ### PROJ
 

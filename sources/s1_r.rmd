@@ -408,6 +408,8 @@ summary(lux$area_err)
 plot(lux[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
 ```
 
+The area is in square meters, so we can use facilities in **units** to change to square kilometers to calculate population densities:
+
 ```{r, echo=TRUE}
 units(lux$area)
 ```
@@ -427,7 +429,7 @@ lux$ghsl_den <- lux$ghsl_pop/lux$area
 summary(lux$ghsl_den)
 ```
 
-We can do the same checks with the tree counts:
+We can do the same kinds of sourcing checks with the tree counts:
 
 ```{r, echo=TRUE}
 trees_sgbp <- st_intersects(st_transform(lux, 2169), trees)
@@ -435,6 +437,7 @@ trees_cnt <- sapply(trees_sgbp, length)
 all.equal(trees_cnt, lux$tree_count)
 ```
 
+But we are not ready to move on yet.
 
 ### PROJ
 
