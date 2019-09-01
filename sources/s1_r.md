@@ -731,7 +731,7 @@ library(sf)
 ```
 
 ```
-## Linking to GEOS 3.7.2, GDAL 3.0.1, PROJ 6.1.1
+## Linking to GEOS 3.7.2, GDAL 3.0.1, PROJ 6.2.0
 ```
 
 The `st_read()` method, here for a `"character"` first object giving the file name and path, uses GDAL through **Rcpp** to identify the driver required, and to use it to read the feature geometries and fields. The character string fields are not converted to `"factor"` representation, as they are not categorical variables:
@@ -1531,7 +1531,7 @@ system.time(ghsl0 <- read_stars("../data/ghsl.tiff", proxy=FALSE))
 
 ```
 ##    user  system elapsed 
-##   0.004   0.002   0.006
+##   0.006   0.000   0.005
 ```
 
 ```r
@@ -1598,7 +1598,7 @@ system.time(ghsl_sum0 <- aggregate(st_warp(ghsl0, crs=2169, cellsize=250, use_gd
 
 ```
 ##    user  system elapsed 
-##   0.813   0.027   0.864
+##   0.750   0.020   0.793
 ```
 
 Using the proxy in this case takes about the same time:
@@ -1610,7 +1610,7 @@ system.time(ghsl_sum1 <- aggregate(st_warp(ghsl1, crs=2169, cellsize=250, use_gd
 
 ```
 ##    user  system elapsed 
-##   0.715   0.008   0.745
+##   0.656   0.006   0.688
 ```
 
 
@@ -1620,7 +1620,7 @@ system.time(ghsl_sum2 <- aggregate(ghsl0, st_transform(lux, crs=st_crs(ghsl0)$pr
 
 ```
 ##    user  system elapsed 
-##   0.554   0.008   0.575
+##   0.513   0.005   0.530
 ```
 
 The output values following warping are closely aligned with, but differ a little from those included in the vector object read to begin with; it looks as though the vector object was transformed to match the raster before aggregation:
@@ -1656,8 +1656,6 @@ st_write(lux_tmerc, "../data/lux_tmerc.gpkg", delete_dsn=TRUE)
 
 ```
 ## Deleting source `../data/lux_tmerc.gpkg' using driver `GPKG'
-## Writing layer `lux_tmerc' to data source `../data/lux_tmerc.gpkg' using driver `GPKG'
-## features:       102
-## fields:         16
-## geometry type:  Multi Polygon
+## Updating layer `lux_tmerc' to data source `../data/lux_tmerc.gpkg' using driver `GPKG'
+## Writing 102 features with 16 fields and geometry type Multi Polygon.
 ```
