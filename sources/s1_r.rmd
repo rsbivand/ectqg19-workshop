@@ -252,7 +252,7 @@ str(DFa)
 
 ### The **sf** package
 
-The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geogompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
+The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geocompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
 
 
 ```{r, echo=TRUE}
@@ -360,12 +360,15 @@ We can drill down to the first feature geometry `"sfg"` object, which is a matri
 str(lux[[attr(lux, "sf_column")]][[1]])
 ```
 
+### Checking the data
 
-https://data.public.lu/en/datasets/population-per-municipality/
+Stepping back, we can try to check where the `POPULATION` field/column came from; the Luxembourg public data source provides a file, here as `"geojson"` https://data.public.lu/en/datasets/population-per-municipality/:
 
 ```{r, echo=TRUE}
 pop <- st_read("../data/statec_population_by_municipality.geojson")
 ```
+
+The difference is in the ordering of the features in the two objects:
 
 ```{r, echo=TRUE}
 all.equal(pop$POPULATION, lux$POPULATION)
@@ -373,15 +376,150 @@ o <- match(as.character(pop$LAU2), as.character(lux$LAU2))
 all.equal(pop$POPULATION, lux$POPULATION[o])
 ```
 
-https://data.public.lu/en/datasets/remarkable-trees/
+We'll also be able to look at the differences between population counts from this data source and from GHSL https://ghsl.jrc.ec.europa.eu/; the data source is probably the 2011 census:
+
+```{r, echo=TRUE}
+plot(lux[, c("POPULATION", "ghsl_pop")])
+```
+
+The trees are from https://data.public.lu/en/datasets/remarkable-trees/, but in projected, not geographical coordinates:
 
 ```{r, echo=TRUE}
 trees <- st_read("../data/trees/anf_remarkable_trees_0.shp")
 ```
 
+If we would like to find the areas of the administrative units, we could use spherical areas from **lwgeom**, or take them by transforming to for example the projection of the trees:
+
 ```{r, echo=TRUE}
 area_sph <- lwgeom::st_geod_area(lux)
 area_tmerc <- st_area(st_transform(lux, 2169))
+```
+
+There are small differences between these area outputs:
+
+```{r, echo=TRUE}
+lux$area <- area_tmerc
+lux$area_err <- (lux$area - area_sph)/area_tmerc
+summary(lux$area_err)
+```
+
+
+```{r, echo=TRUE}
+plot(lux[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
+```
+
+```{r, echo=TRUE}
+units(lux$area)
+```
+
+```{r, echo=TRUE}
+units(lux$area) <- "km^2"
+units(lux$area)
+```
+
+```{r, echo=TRUE}
+lux$pop_den <- lux$POPULATION/lux$area
+summary(lux$pop_den)
+```
+
+```{r, echo=TRUE}
+lux$ghsl_den <- lux$ghsl_pop/lux$area
+summary(lux$ghsl_den)
+```
+
+We can do the same checks with the tree counts:
+
+```{r, echo=TRUE}
+trees_sgbp <- st_intersects(st_transform(lux, 2169), trees)
+trees_cnt <- sapply(trees_sgbp, length)
+all.equal(trees_cnt, lux$tree_count)
+```
+
+
+### PROJ
+
+Because so much open source (and other) software uses the PROJ library and framework, many are affected when PROJ upgrades. Until very recently, PROJ has been seen as very reliable, and the changes taking place now are intended to confirm and reinforce this reliability. Before PROJ 5 (PROJ 6 is out now, PROJ 7 is coming early in 2020), the `+datum=` tag was used, perhaps with `+towgs84=` with three or seven coefficients, and possibly `+nadgrids=` where datum transformation grids were available. However, transformations from one projection to another first inversed to longitude-latitude in WGS84, then projected on to the target projection.
+
+
+### Big bump coming:
+
+'Fast-forward 35 years and PROJ.4 is everywhere: It provides coordinate handling for almost every geospatial program, open or closed source. Today,  we  see  a  drastical  increase  in  the  need  for  high  accuracy  GNSS  coordinate  handling, especially in the agricultural and construction engineering sectors.  This need for geodetic-accuracy transformations  is  not  satisfied  by  "classic  PROJ.4".  But  with  the  ubiquity  of  PROJ.4,  we  can provide these transformations "everywhere", just by implementing them as part of PROJ.4' [@evers+knudsen17].
+
+
+### Escaping the WGS84 hub/pivot: PROJ and OGC WKT2
+
+
+Following the introduction of geodetic modules and pipelines in PROJ 5 [@knudsen+evers17; @evers+knudsen17], PROJ 6 moves further. Changes in the legacy PROJ representation and WGS84 transformation hub have been coordinated through the [GDAL barn raising](https://gdalbarn.com/) initiative. Crucially WGS84 often ceases to be the pivot for moving between datums. A new OGC WKT is coming, and an SQLite EPSG file database has replaced CSV files. SRS will begin to support 3D by default, adding time too as SRS change. See also [PROJ migration notes](https://proj.org/development/migration.html).
+
+There are very useful postings on the PROJ mailing list from Martin Desruisseaux, first [proposing clarifications](https://lists.osgeo.org/pipermail/proj/2019-July/008748.html) and a [follow-up](https://lists.osgeo.org/pipermail/proj/2019-August/008750.html) including a summary:
+
+> * "Early binding" ≈ hub transformation technique.
+
+> * "Late binding" ≈ hub transformation technique NOT used, replaced by
+a more complex technique consisting in searching parameters in the
+EPSG database after the transformation context (source, target,
+epoch, area of interest) is known.
+
+> * The problem of hub transformation technique is independent of WGS84.
+It is caused by the fact that transformations to/from the hub are
+approximate. Any other hub we could invent in replacement of WGS84
+will have the same problem, unless we can invent a hub for which
+transformations are exact (I think that if such hub existed, we
+would have already heard about it).
+
+> The solution proposed by ISO 19111 (in my understanding) is:
+
+> * Forget about hub (WGS84 or other), unless the simplicity of
+early-binding is considered more important than accuracy.
+
+> * Associating a CRS to a coordinate set (geometry or raster) is no
+longer sufficient. A {CRS, epoch} tuple must be associated. ISO
+19111 calls this tuple "Coordinate metadata". From a programmatic
+API point of view, this means that getCoordinateReferenceSystem()
+method in Geometry objects (for instance) needs to be replaced by a
+getCoordinateMetadata() method.
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo EPSG:4326 -o PROJ", intern=TRUE), sep="\n")
+```
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo EPSG:4326 -o WKT1_GDAL", intern=TRUE), sep="\n")
+```
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo EPSG:4326 -o WKT2_2018", intern=TRUE), sep="\n")
+```
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo EPSG:2169 -o PROJ", intern=TRUE), sep="\n")
+```
+
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo EPSG:2169 -o WKT1_GDAL", intern=TRUE), sep="\n")
+```
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo EPSG:2169 -o WKT2_2018", intern=TRUE), sep="\n")
+```
+
+
+
+```{r, echo=TRUE}
+cat(system("projinfo -s EPSG:4326 -t EPSG:2169 -o PROJ", intern=TRUE), sep="\n")
 ```
 
 

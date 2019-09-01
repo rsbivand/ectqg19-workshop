@@ -722,7 +722,7 @@ str(DFa)
 
 ### The **sf** package
 
-The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geogompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
+The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geocompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
 
 
 
@@ -937,159 +937,393 @@ str(lux[[attr(lux, "sf_column")]][[1]])
 ##  - attr(*, "class")= chr [1:3] "XY" "MULTIPOLYGON" "sfg"
 ```
 
+### Checking the data
 
-## Old style spatial vector representation
-
-[@pebesma+bivand:05], [@asdar]
-
-
-```r
-library(rgdal)
-```
-
-```
-## Loading required package: sp
-```
-
-```
-## rgdal: version: 1.4-6, (SVN revision 828)
-##  Geospatial Data Abstraction Library extensions to R successfully loaded
-##  Loaded GDAL runtime: GDAL 3.0.1, released 2019/06/28
-##  Path to GDAL shared files: 
-##  GDAL binary built with GEOS: TRUE 
-##  Loaded PROJ.4 runtime: Rel. 6.1.1, July 1st, 2019, [PJ_VERSION: 611]
-##  Path to PROJ.4 shared files: (autodetected)
-##  Linking to sp version: 1.3-1
-```
-
+Stepping back, we can try to check where the `POPULATION` field/column came from; the Luxembourg public data source provides a file, here as `"geojson"` https://data.public.lu/en/datasets/population-per-municipality/:
 
 
 ```r
-lux_old <- readOGR("../data/lux_regions.gpkg", integer64="warn.loss", stringsAsFactors=FALSE)
+pop <- st_read("../data/statec_population_by_municipality.geojson")
 ```
 
 ```
-## OGR data source with driver: GPKG 
-## Source: "/home/rsb/presentations/ectqg19-workshop/data/lux_regions.gpkg", layer: "lux_regions"
-## with 102 features
-## It has 10 fields
-## Integer64 fields read as signed 32-bit integers:  POPULATION
+## Reading layer `Inspire_10072018' from data source `/home/rsb/presentations/ectqg19-workshop/data/statec_population_by_municipality.geojson' using driver `GeoJSON'
+## Simple feature collection with 102 features and 9 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 5.735708 ymin: 49.44786 xmax: 6.530898 ymax: 50.18277
+## epsg (SRID):    4326
+## proj4string:    +proj=longlat +datum=WGS84 +no_defs
 ```
 
-
-```r
-summary(lux_old)
-```
-
-```
-## Object of class SpatialPolygonsDataFrame
-## Coordinates:
-##         min       max
-## x  5.735708  6.530898
-## y 49.447859 50.182772
-## Is projected: FALSE 
-## proj4string :
-## [+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0]
-## Data attributes:
-##    POPULATION      COMMUNE_1             LAU2            X_subtype        
-##  Min.   :   790   Length:102         Length:102         Length:102        
-##  1st Qu.:  1915   Class :character   Class :character   Class :character  
-##  Median :  2938   Mode  :character   Mode  :character   Mode  :character  
-##  Mean   :  5902                                                           
-##  3rd Qu.:  5489                                                           
-##  Max.   :116323                                                           
-##    COMMUNE            DISTRICT            CANTON            tree_count    
-##  Length:102         Length:102         Length:102         Min.   : 0.000  
-##  Class :character   Class :character   Class :character   1st Qu.: 2.000  
-##  Mode  :character   Mode  :character   Mode  :character   Median : 4.000  
-##                                                           Mean   : 5.245  
-##                                                           3rd Qu.: 7.000  
-##                                                           Max.   :43.000  
-##     ghsl_pop         light_level    
-##  Min.   :   815.1   Min.   : 299.0  
-##  1st Qu.:  1726.2   1st Qu.: 628.8  
-##  Median :  3072.4   Median : 896.5  
-##  Mean   :  5542.2   Mean   :1076.9  
-##  3rd Qu.:  5190.2   3rd Qu.:1255.2  
-##  Max.   :106144.0   Max.   :5614.0
-```
-
+The difference is in the ordering of the features in the two objects:
 
 
 ```r
-str(lux_old, max.level=2)
+all.equal(pop$POPULATION, lux$POPULATION)
 ```
 
 ```
-## Formal class 'SpatialPolygonsDataFrame' [package "sp"] with 5 slots
-##   ..@ data       :'data.frame':	102 obs. of  10 variables:
-##   ..@ polygons   :List of 102
-##   ..@ plotOrder  : int [1:102] 95 15 25 44 84 10 94 27 5 6 ...
-##   ..@ bbox       : num [1:2, 1:2] 5.74 49.45 6.53 50.18
-##   .. ..- attr(*, "dimnames")=List of 2
-##   ..@ proj4string:Formal class 'CRS' [package "sp"] with 1 slot
+## [1] "Mean relative difference: 1.045941"
+```
+
+```r
+o <- match(as.character(pop$LAU2), as.character(lux$LAU2))
+all.equal(pop$POPULATION, lux$POPULATION[o])
+```
+
+```
+## [1] TRUE
+```
+
+We'll also be able to look at the differences between population counts from this data source and from GHSL https://ghsl.jrc.ec.europa.eu/; the data source is probably the 2011 census:
+
+
+```r
+plot(lux[, c("POPULATION", "ghsl_pop")])
+```
+
+![](s1_r_files/figure-html/unnamed-chunk-31-1.png)<!-- -->
+
+The trees are from https://data.public.lu/en/datasets/remarkable-trees/, but in projected, not geographical coordinates:
+
+
+```r
+trees <- st_read("../data/trees/anf_remarkable_trees_0.shp")
+```
+
+```
+## Reading layer `anf_remarkable_trees_0' from data source `/home/rsb/presentations/ectqg19-workshop/data/trees/anf_remarkable_trees_0.shp' using driver `ESRI Shapefile'
+## Simple feature collection with 535 features and 5 fields
+## geometry type:  POINT
+## dimension:      XY
+## bbox:           xmin: 51180 ymin: 57820 xmax: 104902 ymax: 136714
+## epsg (SRID):    2169
+## proj4string:    +proj=tmerc +lat_0=49.8333333333333 +lon_0=6.16666666666667 +k=1 +x_0=80000 +y_0=100000 +ellps=intl +towgs84=-189.6806,18.3463,-42.7695,-0.33746,-3.09264,2.53861,0.4598 +units=m +no_defs
+```
+
+If we would like to find the areas of the administrative units, we could use spherical areas from **lwgeom**, or take them by transforming to for example the projection of the trees:
+
+
+```r
+area_sph <- lwgeom::st_geod_area(lux)
+area_tmerc <- st_area(st_transform(lux, 2169))
+```
+
+There are small differences between these area outputs:
+
+
+```r
+lux$area <- area_tmerc
+lux$area_err <- (lux$area - area_sph)/area_tmerc
+summary(lux$area_err)
+```
+
+```
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## 1.412e-05 1.493e-05 1.710e-05 1.800e-05 1.984e-05 3.116e-05
 ```
 
 
 
 ```r
-class(lux_old)
-```
-
-```
-## [1] "SpatialPolygonsDataFrame"
-## attr(,"package")
-## [1] "sp"
-```
-
-
-
-```r
-class(slot(lux_old, "data"))
-```
-
-```
-## [1] "data.frame"
-```
-
-
-
-```r
-hist(lux_old$ghsl_pop)
+plot(lux[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
 ```
 
 ![](s1_r_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
 
 
-
 ```r
-class(slot(lux_old, "polygons"))
+units(lux$area)
 ```
 
 ```
-## [1] "list"
+## $numerator
+## [1] "m" "m"
+## 
+## $denominator
+## character(0)
+## 
+## attr(,"class")
+## [1] "symbolic_units"
 ```
-
-
-
-```r
-class(slot(lux_old, "proj4string"))
-```
-
-```
-## [1] "CRS"
-## attr(,"package")
-## [1] "sp"
-```
-
 
 
 ```r
-class(lux_old[1:5, 1])
+units(lux$area) <- "km^2"
+units(lux$area)
 ```
 
 ```
-## [1] "SpatialPolygonsDataFrame"
-## attr(,"package")
-## [1] "sp"
+## $numerator
+## [1] "km" "km"
+## 
+## $denominator
+## character(0)
+## 
+## attr(,"class")
+## [1] "symbolic_units"
 ```
+
+
+```r
+lux$pop_den <- lux$POPULATION/lux$area
+summary(lux$pop_den)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   35.60   76.89  139.36  290.12  293.68 2433.16
+```
+
+
+```r
+lux$ghsl_den <- lux$ghsl_pop/lux$area
+summary(lux$ghsl_den)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   32.91   71.10  136.68  268.31  284.85 2088.24
+```
+
+We can do the same checks with the tree counts:
+
+
+```r
+trees_sgbp <- st_intersects(st_transform(lux, 2169), trees)
+trees_cnt <- sapply(trees_sgbp, length)
+all.equal(trees_cnt, lux$tree_count)
+```
+
+```
+## [1] TRUE
+```
+
+
+### PROJ
+
+Because so much open source (and other) software uses the PROJ library and framework, many are affected when PROJ upgrades. Until very recently, PROJ has been seen as very reliable, and the changes taking place now are intended to confirm and reinforce this reliability. Before PROJ 5 (PROJ 6 is out now, PROJ 7 is coming early in 2020), the `+datum=` tag was used, perhaps with `+towgs84=` with three or seven coefficients, and possibly `+nadgrids=` where datum transformation grids were available. However, transformations from one projection to another first inversed to longitude-latitude in WGS84, then projected on to the target projection.
+
+
+### Big bump coming:
+
+'Fast-forward 35 years and PROJ.4 is everywhere: It provides coordinate handling for almost every geospatial program, open or closed source. Today,  we  see  a  drastical  increase  in  the  need  for  high  accuracy  GNSS  coordinate  handling, especially in the agricultural and construction engineering sectors.  This need for geodetic-accuracy transformations  is  not  satisfied  by  "classic  PROJ.4".  But  with  the  ubiquity  of  PROJ.4,  we  can provide these transformations "everywhere", just by implementing them as part of PROJ.4' [@evers+knudsen17].
+
+
+### Escaping the WGS84 hub/pivot: PROJ and OGC WKT2
+
+
+Following the introduction of geodetic modules and pipelines in PROJ 5 [@knudsen+evers17; @evers+knudsen17], PROJ 6 moves further. Changes in the legacy PROJ representation and WGS84 transformation hub have been coordinated through the [GDAL barn raising](https://gdalbarn.com/) initiative. Crucially WGS84 often ceases to be the pivot for moving between datums. A new OGC WKT is coming, and an SQLite EPSG file database has replaced CSV files. SRS will begin to support 3D by default, adding time too as SRS change. See also [PROJ migration notes](https://proj.org/development/migration.html).
+
+There are very useful postings on the PROJ mailing list from Martin Desruisseaux, first [proposing clarifications](https://lists.osgeo.org/pipermail/proj/2019-July/008748.html) and a [follow-up](https://lists.osgeo.org/pipermail/proj/2019-August/008750.html) including a summary:
+
+> * "Early binding" ≈ hub transformation technique.
+
+> * "Late binding" ≈ hub transformation technique NOT used, replaced by
+a more complex technique consisting in searching parameters in the
+EPSG database after the transformation context (source, target,
+epoch, area of interest) is known.
+
+> * The problem of hub transformation technique is independent of WGS84.
+It is caused by the fact that transformations to/from the hub are
+approximate. Any other hub we could invent in replacement of WGS84
+will have the same problem, unless we can invent a hub for which
+transformations are exact (I think that if such hub existed, we
+would have already heard about it).
+
+> The solution proposed by ISO 19111 (in my understanding) is:
+
+> * Forget about hub (WGS84 or other), unless the simplicity of
+early-binding is considered more important than accuracy.
+
+> * Associating a CRS to a coordinate set (geometry or raster) is no
+longer sufficient. A {CRS, epoch} tuple must be associated. ISO
+19111 calls this tuple "Coordinate metadata". From a programmatic
+API point of view, this means that getCoordinateReferenceSystem()
+method in Geometry objects (for instance) needs to be replaced by a
+getCoordinateMetadata() method.
+
+
+
+
+```r
+cat(system("projinfo EPSG:4326 -o PROJ", intern=TRUE), sep="\n")
+```
+
+```
+## PROJ.4 string:
+## +proj=longlat +datum=WGS84 +no_defs +type=crs
+```
+
+
+
+
+```r
+cat(system("projinfo EPSG:4326 -o WKT1_GDAL", intern=TRUE), sep="\n")
+```
+
+```
+## WKT1_GDAL:
+## GEOGCS["WGS 84",
+##     DATUM["WGS_1984",
+##         SPHEROID["WGS 84",6378137,298.257223563,
+##             AUTHORITY["EPSG","7030"]],
+##         AUTHORITY["EPSG","6326"]],
+##     PRIMEM["Greenwich",0,
+##         AUTHORITY["EPSG","8901"]],
+##     UNIT["degree",0.0174532925199433,
+##         AUTHORITY["EPSG","9122"]],
+##     AUTHORITY["EPSG","4326"]]
+```
+
+
+
+
+```r
+cat(system("projinfo EPSG:4326 -o WKT2_2018", intern=TRUE), sep="\n")
+```
+
+```
+## WKT2_2018 string:
+## GEOGCRS["WGS 84",
+##     DATUM["World Geodetic System 1984",
+##         ELLIPSOID["WGS 84",6378137,298.257223563,
+##             LENGTHUNIT["metre",1]]],
+##     PRIMEM["Greenwich",0,
+##         ANGLEUNIT["degree",0.0174532925199433]],
+##     CS[ellipsoidal,2],
+##         AXIS["geodetic latitude (Lat)",north,
+##             ORDER[1],
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##         AXIS["geodetic longitude (Lon)",east,
+##             ORDER[2],
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##     USAGE[
+##         SCOPE["unknown"],
+##         AREA["World"],
+##         BBOX[-90,-180,90,180]],
+##     ID["EPSG",4326]]
+```
+
+
+
+
+```r
+cat(system("projinfo EPSG:2169 -o PROJ", intern=TRUE), sep="\n")
+```
+
+```
+## PROJ.4 string:
+## +proj=tmerc +lat_0=49.8333333333333 +lon_0=6.16666666666667 +k=1 +x_0=80000 +y_0=100000 +ellps=intl +towgs84=-189.6806,18.3463,-42.7695,-0.33746,-3.09264,2.53861,0.4598 +units=m +no_defs +type=crs
+```
+
+
+
+
+
+```r
+cat(system("projinfo EPSG:2169 -o WKT1_GDAL", intern=TRUE), sep="\n")
+```
+
+```
+## WKT1_GDAL:
+## PROJCS["Luxembourg 1930 / Gauss",
+##     GEOGCS["Luxembourg 1930",
+##         DATUM["Luxembourg_1930",
+##             SPHEROID["International 1924",6378388,297,
+##                 AUTHORITY["EPSG","7022"]],
+##             TOWGS84[-189.6806,18.3463,-42.7695,-0.33746,-3.09264,2.53861,0.4598],
+##             AUTHORITY["EPSG","6181"]],
+##         PRIMEM["Greenwich",0,
+##             AUTHORITY["EPSG","8901"]],
+##         UNIT["degree",0.0174532925199433,
+##             AUTHORITY["EPSG","9122"]],
+##         AUTHORITY["EPSG","4181"]],
+##     PROJECTION["Transverse_Mercator"],
+##     PARAMETER["latitude_of_origin",49.8333333333333],
+##     PARAMETER["central_meridian",6.16666666666667],
+##     PARAMETER["scale_factor",1],
+##     PARAMETER["false_easting",80000],
+##     PARAMETER["false_northing",100000],
+##     UNIT["metre",1,
+##         AUTHORITY["EPSG","9001"]],
+##     AUTHORITY["EPSG","2169"]]
+```
+
+
+
+
+```r
+cat(system("projinfo EPSG:2169 -o WKT2_2018", intern=TRUE), sep="\n")
+```
+
+```
+## WKT2_2018 string:
+## PROJCRS["Luxembourg 1930 / Gauss",
+##     BASEGEOGCRS["Luxembourg 1930",
+##         DATUM["Luxembourg 1930",
+##             ELLIPSOID["International 1924",6378388,297,
+##                 LENGTHUNIT["metre",1]]],
+##         PRIMEM["Greenwich",0,
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##         ID["EPSG",4181]],
+##     CONVERSION["Luxembourg Gauss",
+##         METHOD["Transverse Mercator",
+##             ID["EPSG",9807]],
+##         PARAMETER["Latitude of natural origin",49.8333333333333,
+##             ANGLEUNIT["degree",0.0174532925199433],
+##             ID["EPSG",8801]],
+##         PARAMETER["Longitude of natural origin",6.16666666666667,
+##             ANGLEUNIT["degree",0.0174532925199433],
+##             ID["EPSG",8802]],
+##         PARAMETER["Scale factor at natural origin",1,
+##             SCALEUNIT["unity",1],
+##             ID["EPSG",8805]],
+##         PARAMETER["False easting",80000,
+##             LENGTHUNIT["metre",1],
+##             ID["EPSG",8806]],
+##         PARAMETER["False northing",100000,
+##             LENGTHUNIT["metre",1],
+##             ID["EPSG",8807]]],
+##     CS[Cartesian,2],
+##         AXIS["northing (X)",north,
+##             ORDER[1],
+##             LENGTHUNIT["metre",1]],
+##         AXIS["easting (Y)",east,
+##             ORDER[2],
+##             LENGTHUNIT["metre",1]],
+##     USAGE[
+##         SCOPE["unknown"],
+##         AREA["Luxembourg"],
+##         BBOX[49.44,5.73,50.19,6.53]],
+##     ID["EPSG",2169]]
+```
+
+
+
+
+```r
+cat(system("projinfo -s EPSG:4326 -t EPSG:2169 -o PROJ", intern=TRUE), sep="\n")
+```
+
+```
+## Candidate operations found: 2
+## -------------------------------------
+## Operation n°1:
+## 
+## unknown id, Inverse of Luxembourg 1930 to WGS 84 (3) + Luxembourg Gauss, 1 m, Luxembourg
+## 
+## PROJ string:
+## +proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=push +v_3 +step +proj=cart +ellps=WGS84 +step +inv +proj=helmert +x=-189.6806 +y=18.3463 +z=-42.7695 +rx=0.33746 +ry=3.09264 +rz=-2.53861 +s=0.4598 +convention=coordinate_frame +step +inv +proj=cart +ellps=intl +step +proj=pop +v_3 +step +proj=tmerc +lat_0=49.8333333333333 +lon_0=6.16666666666667 +k=1 +x_0=80000 +y_0=100000 +ellps=intl +step +proj=axisswap +order=2,1
+## 
+## -------------------------------------
+## Operation n°2:
+## 
+## unknown id, Inverse of Luxembourg 1930 to WGS 84 (4) + Luxembourg Gauss, 1 m, Luxembourg
+## 
+## PROJ string:
+## +proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=push +v_3 +step +proj=cart +ellps=WGS84 +step +inv +proj=molobadekas +x=-265.8867 +y=76.9851 +z=20.2667 +rx=0.33746 +ry=3.09264 +rz=-2.53861 +s=0.4598 +px=4103620.3943 +py=440486.4235 +pz=4846923.4558 +convention=coordinate_frame +step +inv +proj=cart +ellps=intl +step +proj=pop +v_3 +step +proj=tmerc +lat_0=49.8333333333333 +lon_0=6.16666666666667 +k=1 +x_0=80000 +y_0=100000 +ellps=intl +step +proj=axisswap +order=2,1
+```
+
+
