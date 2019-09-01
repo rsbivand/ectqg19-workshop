@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = FALSE)
 I am running R 3.6.1, with recent `update.packages()`.
 
 ```{r, echo=TRUE}
-needed <- c("sf", "stars", "raster", "sp", "rgdal", "rgeos")
+needed <- c("sf", "stars", "lwgeom")
 ```
 
 ## Vectors, matrices and `data.frames`
@@ -252,7 +252,7 @@ str(DFa)
 
 ### The **sf** package
 
-The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geocompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
+The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** uses `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geocompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
 
 
 ```{r, echo=TRUE}
@@ -263,6 +263,12 @@ The `st_read()` method, here for a `"character"` first object giving the file na
 
 ```{r, echo=TRUE}
 lux <- st_read("../data/lux_regions.gpkg", stringsAsFactors=FALSE)
+```
+
+The vector drivers available to me with my GDAL build are:
+
+```{r, echo=TRUE}
+st_drivers(what="vector")[,c(2:4, 7)]
 ```
 
 Package **sf** provides handling of feature data, where feature
@@ -392,49 +398,50 @@ If we would like to find the areas of the administrative units, we could use sph
 
 ```{r, echo=TRUE}
 area_sph <- lwgeom::st_geod_area(lux)
-area_tmerc <- st_area(st_transform(lux, 2169))
+lux_tmerc <- st_transform(lux, 2169)
+area_tmerc <- st_area(lux_tmerc)
 ```
 
 There are small differences between these area outputs:
 
 ```{r, echo=TRUE}
-lux$area <- area_tmerc
-lux$area_err <- (lux$area - area_sph)/area_tmerc
-summary(lux$area_err)
+lux_tmerc$area <- area_tmerc
+lux_tmerc$area_err <- (lux_tmerc$area - area_sph)/lux_tmerc$area
+summary(lux_tmerc$area_err)
 ```
 
 
 ```{r, echo=TRUE}
-plot(lux[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
+plot(lux_tmerc[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
 ```
 
 The area is in square meters, so we can use facilities in **units** to change to square kilometers to calculate population densities:
 
 ```{r, echo=TRUE}
-units(lux$area)
+units(lux_tmerc$area)
 ```
 
 ```{r, echo=TRUE}
-units(lux$area) <- "km^2"
-units(lux$area)
+units(lux_tmerc$area) <- "km^2"
+units(lux_tmerc$area)
 ```
 
 ```{r, echo=TRUE}
-lux$pop_den <- lux$POPULATION/lux$area
-summary(lux$pop_den)
+lux_tmerc$pop_den <- lux_tmerc$POPULATION/lux_tmerc$area
+summary(lux_tmerc$pop_den)
 ```
 
 ```{r, echo=TRUE}
-lux$ghsl_den <- lux$ghsl_pop/lux$area
-summary(lux$ghsl_den)
+lux_tmerc$ghsl_den <- lux_tmerc$ghsl_pop/lux_tmerc$area
+summary(lux_tmerc$ghsl_den)
 ```
 
 We can do the same kinds of sourcing checks with the tree counts:
 
 ```{r, echo=TRUE}
-trees_sgbp <- st_intersects(st_transform(lux, 2169), trees)
+trees_sgbp <- st_intersects(lux_tmerc, trees)
 trees_cnt <- sapply(trees_sgbp, length)
-all.equal(trees_cnt, lux$tree_count)
+all.equal(trees_cnt, lux_tmerc$tree_count)
 ```
 
 But we are not ready to move on yet.
@@ -482,7 +489,7 @@ API point of view, this means that getCoordinateReferenceSystem()
 method in Geometry objects (for instance) needs to be replaced by a
 getCoordinateMetadata() method.
 
-
+The `projinfo` utility is available with the external PROJ library, so most likely not in general; this is for PROJ 6.1.1 (current as of writing):
 
 ```{r, echo=TRUE}
 cat(system("projinfo EPSG:4326 -o PROJ", intern=TRUE), sep="\n")
@@ -525,4 +532,55 @@ cat(system("projinfo EPSG:2169 -o WKT2_2018", intern=TRUE), sep="\n")
 cat(system("projinfo -s EPSG:4326 -t EPSG:2169 -o PROJ", intern=TRUE), sep="\n")
 ```
 
+### Raster
 
+The GHSL data from https://ghsl.jrc.ec.europa.eu/ and provided in the `ghsl_pop` column is not documented here (yet). Using the GeoTIFF file (which turns out to be `+proj=moll`), we can read using a GDAL driver, first into memory, then proxy:
+
+```{r, echo=TRUE}
+library(stars)
+system.time(ghsl0 <- read_stars("../data/ghsl.tiff", proxy=FALSE))
+ghsl0
+```
+
+
+
+```{r, echo=TRUE}
+system.time(ghsl1 <- read_stars("../data/ghsl.tiff", proxy=TRUE))
+ghsl1
+```
+
+```{r, echo=TRUE}
+plot(ghsl0)
+```
+
+Using the aggregate method on the input raster in memory warped to the Luxembourg transverse Mercator projection, by the municipality boundaries in `lux_tmerc`, we can recover the population counts. 
+
+```{r, echo=TRUE}
+system.time(ghsl_sum0 <- aggregate(st_warp(ghsl0, crs=2169, cellsize=250, use_gdal=FALSE), lux_tmerc, sum))
+```
+
+Using the proxy in this case takes about the same time:
+
+```{r, echo=TRUE}
+system.time(ghsl_sum1 <- aggregate(st_warp(ghsl1, crs=2169, cellsize=250, use_gdal=FALSE), lux_tmerc, sum))
+```
+
+```{r, echo=TRUE}
+system.time(ghsl_sum2 <- aggregate(ghsl0, st_transform(lux, crs=st_crs(ghsl0)$proj4string), sum))
+```
+
+The output values following warping are closely aligned with, but differ a little from those included in the vector object read to begin with; it looks as though the vector object was transformed to match the raster before aggregation:
+
+```{r, echo=TRUE}
+summary(cbind(orig=lux_tmerc$ghsl_pop, warp=ghsl_sum0$ghsl.tiff, warp_proxy=ghsl_sum1$ghsl.tiff, moll=ghsl_sum2$ghsl.tiff))
+```
+
+```{r, echo=TRUE}
+lux_tmerc$ghsl_tiff <- ghsl_sum0$ghsl.tiff
+lux_tmerc$ghsl_warp_diff <- lux_tmerc$ghsl_tiff - lux_tmerc$ghsl_pop
+plot(lux_tmerc[,"ghsl_warp_diff"])
+```
+
+```{r, echo=TRUE}
+st_write(lux_tmerc, "../data/lux_tmerc.gpkg", delete_dsn=TRUE)
+```

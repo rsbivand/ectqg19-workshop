@@ -1,0 +1,293 @@
+---
+title: "R: Visualization"
+author: "Roger Bivand"
+date: "Thursday, 5 September 2019, 11:35-12:00"
+output: 
+  html_document:
+    keep_md: true
+bibliography: rmd.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### Required current contributed CRAN packages:
+
+I am running R 3.6.1, with recent `update.packages()`.
+
+```{r, echo=TRUE}
+needed <- c("sf", "stars", "sp", "classInt", "raster", "colorspace", "RColorBrewer", "ggplot2", "cartography", "tmap", "mapview")
+```
+
+```{r, echo=TRUE}
+library(sf)
+lux_tmerc <- st_read("../data/lux_tmerc.gpkg")
+```
+
+## Non-spatial visualisation
+
+```{r, echo=TRUE}
+names(lux_tmerc)
+```
+
+
+```{r, echo=TRUE}
+sapply(lux_tmerc, function(x) class(x)[1])
+```
+
+### Univatiate continuous
+
+```{r, echo=TRUE}
+plot(density(lux_tmerc$pop_den), main="Population density per square km")
+rug(lux_tmerc$pop_den)
+```
+
+
+```{r, echo=TRUE}
+hist(lux_tmerc$pop_den, main="Population density per square km")
+```
+
+### Bivariate continuous
+
+
+```{r, echo=TRUE}
+plot(lux_tmerc$light_level, lux_tmerc$pop_den)
+```
+
+```{r, echo=TRUE}
+plot(pop_den ~ light_level, lux_tmerc)
+```
+
+### Categorical plots
+
+
+```{r, echo=TRUE}
+opar <- par(mar=c(3, 10, 3, 1), las=1)
+boxplot(pop_den ~ DISTRICT, lux_tmerc, horizontal=TRUE, ylab="", main="Population density per administrative area by district")
+par(opar)
+```
+
+
+
+## Spatial visualization
+
+We have already seen some plot methods for `"sf"`, `"sfc"` and `"nb"` objects in several packages for static plots, and **mapview** for interactive visualization. Let's run through available packages, functions and methods quickly.
+
+### Thematic mapping
+
+**classInt** provides the key class interval determination for thematic mapping of continuous variables. The `classIntervals()` function takes a numeric vector (now also of classes POSIXt or units), a target number of intervals, and a style of class interval. Other arguments control the closure and precision of the intervals found.
+
+```{r, echo=TRUE}
+library(classInt)
+args(classIntervals)
+```
+We'll find 7 intervals using Fisher natural breaks for the pop_denation variable:
+
+```{r, echo=TRUE}
+(cI <- classIntervals(lux_tmerc$pop_den, n=7, style="fisher"))
+```
+
+
+```{r, echo=TRUE}
+(cI_pr <- classIntervals(lux_tmerc$pop_den, n=7, style="pretty"))
+```
+
+
+```{r, echo=TRUE}
+(cI_qu <- classIntervals(lux_tmerc$pop_den, n=7, style="quantile"))
+```
+
+
+We also need to assign a palette of graphical values, most often colours, to use to fill the intervals, and can inspect the intervals and fill colours with a plot method:
+
+The **RColorBrewer** package gives by permission access to the ColorBrewer palettes accesible from the [ColorBrewer](http://colorbrewer2.org)
+website. Note that ColorBrewer limits the number of classes tightly, only 3--9 sequential classes
+
+
+```{r, echo=TRUE}
+library(RColorBrewer)
+pal <- RColorBrewer::brewer.pal((length(cI$brks)-1), "Reds")
+plot(cI_pr, pal)
+```
+
+```{r, echo=TRUE}
+plot(cI_qu, pal)
+```
+
+```{r, echo=TRUE}
+plot(cI, pal)
+```
+
+We can also display all the ColorBrewer palettes:
+
+```{r, echo=TRUE}
+display.brewer.all()
+```
+
+
+### Package-specific plot and image methods
+
+The **sp** package provided base graphics plot and image methods. **sf** provides plot methods using base graphics; the method for `"sf"` objects re-arranges the plot window to provide a colour key, so extra steps are needed if overplotting is needed:
+
+```{r, echo=TRUE}
+plot(lux_tmerc[,"pop_den"], breaks=cI$brks, pal=pal)
+```
+
+(returns current `par()` settings); the method also supports direct use of **classInt**:
+
+```{r, echo=TRUE}
+plot(lux_tmerc[,"pop_den"], nbreaks=7, breaks="fisher", pal=pal)
+```
+
+Earlier we used the plot method for `"sfc"` objects which does not manipulate the graphics device, and is easier for overplotting.
+
+
+### The mapview package
+
+**mapview**: Quickly and conveniently create interactive visualisations of spatial data with or without background maps. Attributes of displayed features are fully queryable via pop-up windows. Additional functionality includes methods to visualise true- and false-color raster images, bounding boxes, small multiples and 3D raster data cubes. It uses **leaflet** and other HTML packages.
+
+```{r, echo=TRUE}
+library(mapview)
+mapview(lux_tmerc, zcol="pop_den", col.regions=pal, at=cI$brks)
+```
+
+
+### The tmap package
+
+**tmap**: Thematic maps show spatial distributions. The theme refers to the phenomena that is shown, which is often demographical, social, cultural, or economic. The best known thematic map type is the choropleth, in which regions are colored according to the distribution of a data variable. The R package tmap offers a coherent plotting system for thematic maps that is based on the layered grammar of graphics. Thematic maps are created by stacking layers, where per layer, data can be mapped to one or more aesthetics. It is also possible to generate small multiples. Thematic maps can be further embellished by configuring the map layout and by adding map attributes, such as a scale bar and a compass. Besides plotting thematic maps on the graphics device, they can also be made interactive as an HTML widget. In addition, the R package **tmaptools** contains several convenient functions for reading and processing spatial data. See  [@JSSv084i06] and Chapter 8 in [@geocompr].
+
+The **tmap** package provides cartographically informed, grammar of graphics (gg) based functionality now, like **ggplot2** using **grid** graphics. John McIntosh tried with [ggplot2](http://johnmackintosh.com/2017-08-22-simply-mapping/), with quite nice results. I suggested he look at **tmap**, and things got [better](http://johnmackintosh.com/2017-09-01-easy-maps-with-tmap/), because **tmap** can switch between interactive and static viewing. **tmap** also provides direct access to **classInt** class intervals. 
+
+```{r, echo=TRUE}
+library(tmap)
+tmap_mode("plot")
+o <- tm_shape(lux_tmerc) + tm_fill("pop_den", style="fisher", n=7, palette="Reds")
+class(o)
+```
+
+returns a `"tmap"` object, a **grid** GROB (graphics object), with print methods.
+
+```{r, echo=TRUE}
+o
+```
+
+Since the objects are GROBs, they can be updated, as in **lattice** with **latticeExtra** or **ggplot2**:
+
+```{r, echo=TRUE}
+o + tm_borders(alpha=0.5, lwd=0.5)
+```
+
+Using `tmap_mode()`, we can switch between presentation (`"plot"`) and interactive (`"view"`) plotting:
+
+```{r, echo=TRUE}
+tmap_mode("view")
+```
+
+```{r, echo=TRUE}
+o + tm_borders(alpha=0.5, lwd=0.5)
+```
+
+
+```{r, echo=TRUE}
+tmap_mode("plot")
+```
+
+There is also a Shiny tool for exploring palettes:
+
+```{r, echo=TRUE, eval=FALSE}
+tmaptools::palette_explorer()
+```
+
+### The cartography package
+
+**cartography** helps to design cartographic representations such as proportional symbols, choropleth, typology, flows or discontinuities maps. It also offers several features that improve the graphic presentation of maps, for instance, map palettes, layout elements (scale, north arrow, title...), labels or legends. [@giraud+lambert16; @giraud+lambert17], http://riatelab.github.io/cartography/vignettes/cheatsheet/cartography_cheatsheet.pdf. The package is associated with **rosm**: Download and plot Open Street Map <http://www.openstreetmap.org/>, Bing Maps <http://www.bing.com/maps> and other tiled map sources. Use to create basemaps quickly and add hillshade to vector-based maps. https://cran.r-project.org/web/packages/rosm/vignettes/rosm.html
+
+The package organizes extra palettes:
+
+```{r, echo=TRUE}
+library(cartography)
+display.carto.all()
+```
+
+The plotting functions (mot methods) use base graphics:
+
+```{r, echo=TRUE}
+choroLayer(lux_tmerc, var="pop_den", method="fisher-jenks", nclass=7, col=pal, legend.values.rnd=3)
+```
+
+(returns NULL)
+
+### The ggplot2 package
+
+The **ggplot2** package provides the `geom_sf()` facility for mapping:
+
+```{r, echo=TRUE}
+library(ggplot2)
+```
+
+```{r, echo=TRUE}
+g <- ggplot(lux_tmerc) + geom_sf(aes(fill=pop_den))
+g
+```
+
+It is possible to set a theme that drops the arguably unnecessary graticule:
+
+```{r, echo=TRUE}
+g + theme_void()
+```
+
+
+```{r, echo=TRUE}
+g + theme_void() + scale_fill_distiller(palette="Reds", direction=1)
+```
+
+but there is a lot of jumping through hoops to get a simple map. To get proper class intervals involves even more work, because **ggplot2** takes specific, not general, positions on how graphics are observed. ColorBrewer eschews continuous colour scales based on cognitive research, but ggplot2 enforces them for continuous variables (similarly for graticules, which may make sense for data plots but not for maps).
+
+### Raster visualization
+
+```{r, echo=TRUE}
+library(stars)
+ghsl0 <- read_stars("../data/ghsl.tiff", proxy=FALSE)
+plot(ghsl0["ghsl.tiff"])
+```
+
+```{r, echo=TRUE}
+plot(ghsl0["ghsl.tiff"], breaks="fisher", nbreaks=11)
+```
+
+```{r, echo=TRUE}
+library(mapview)
+library(raster)
+r <- as(st_warp(ghsl0, crs=3857, cellsize=250), "Raster")
+mapview(r)
+```
+
+
+### More on palettes
+
+
+try exploring alternative class interval definitions and palettes, maybe also visiting http://hclwizard.org/ and its `hclwizard()` Shiny app, returning a palette generating function on clicking the "Return to R" button:
+
+```{r, echo=TRUE}
+library(colorspace)
+hcl_palettes("sequential (single-hue)", n = 7, plot = TRUE)
+```
+
+```{r, echo=TRUE, eval=FALSE}
+pal <- hclwizard()
+pal(6)
+```
+
+The end of rainbow discussion is informative:
+
+```{r, echo=TRUE}
+wheel <- function(col, radius = 1, ...)
+  pie(rep(1, length(col)), col = col, radius = radius, ...) 
+opar <- par(mfrow=c(1,2))
+wheel(rainbow_hcl(12))
+wheel(rainbow(12))
+par(opar)
+```
+

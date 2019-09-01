@@ -17,7 +17,7 @@ I am running R 3.6.1, with recent `update.packages()`.
 
 
 ```r
-needed <- c("sf", "stars", "raster", "sp", "rgdal", "rgeos")
+needed <- c("sf", "stars", "lwgeom")
 ```
 
 ## Vectors, matrices and `data.frames`
@@ -722,7 +722,7 @@ str(DFa)
 
 ### The **sf** package
 
-The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** used `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geocompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
+The recent **sf** package bundles GDAL and GEOS (**sp** just defined the classes and methods, leaving I/O and computational geometry to other packages **rgdal** and **rgeos**). **sf** uses `data.frame` objects with one (or more) geometry column for vector data. The representation follows ISO 19125 (*Simple Features*), and has WKT (text) and WKB (binary) representations (used by GDAL and GEOS internally). The drivers include PostGIS and other database constructions permitting selection, and WFS for server APIs. These are the key references for **sf**: [@geocompr], [@sdsr], [@RJ-2018-009], package [vignettes](https://cran.r-project.org/package=sf) and blog posts on (https://www.r-spatial.org/).
 
 
 
@@ -749,6 +749,186 @@ lux <- st_read("../data/lux_regions.gpkg", stringsAsFactors=FALSE)
 ## bbox:           xmin: 5.735708 ymin: 49.44786 xmax: 6.530898 ymax: 50.18277
 ## epsg (SRID):    4326
 ## proj4string:    +proj=longlat +datum=WGS84 +no_defs
+```
+
+The vector drivers available to me with my GDAL build are:
+
+
+```r
+st_drivers(what="vector")[,c(2:4, 7)]
+```
+
+```
+##                                                                    long_name
+## PCIDSK                                                  PCIDSK Database File
+## netCDF                                            Network Common Data Format
+## PDS4                                            NASA Planetary Data System 4
+## JP2OpenJPEG                       JPEG-2000 driver based on OpenJPEG library
+## PDF                                                           Geospatial PDF
+## MBTiles                                                              MBTiles
+## EEDA                                                   Earth Engine Data API
+## ESRI Shapefile                                                ESRI Shapefile
+## MapInfo File                                                    MapInfo File
+## UK .NTF                                                              UK .NTF
+## OGR_SDTS                                                                SDTS
+## S57                                                           IHO S-57 (ENC)
+## DGN                                                         Microstation DGN
+## OGR_VRT                                             VRT - Virtual Datasource
+## REC                                                            EPIInfo .REC 
+## Memory                                                                Memory
+## BNA                                                                Atlas BNA
+## CSV                                             Comma Separated Value (.csv)
+## NAS                                                              NAS - ALKIS
+## GML                                          Geography Markup Language (GML)
+## GPX                                                                      GPX
+## KML                                            Keyhole Markup Language (KML)
+## GeoJSON                                                              GeoJSON
+## GeoJSONSeq                                                  GeoJSON Sequence
+## ESRIJSON                                                            ESRIJSON
+## TopoJSON                                                            TopoJSON
+## Interlis 1                                                        Interlis 1
+## Interlis 2                                                        Interlis 2
+## OGR_GMT                                             GMT ASCII Vectors (.gmt)
+## GPKG                                                              GeoPackage
+## SQLite                                                   SQLite / Spatialite
+## ODBC                                                                    ODBC
+## WAsP                                                        WAsP .map format
+## PGeo                                               ESRI Personal GeoDatabase
+## MSSQLSpatial                           Microsoft SQL Server Spatial Database
+## PostgreSQL                                                PostgreSQL/PostGIS
+## OpenFileGDB                                                     ESRI FileGDB
+## XPlane                                  X-Plane/Flightgear aeronautical data
+## DXF                                                              AutoCAD DXF
+## CAD                                                           AutoCAD Driver
+## Geoconcept                                                        Geoconcept
+## GeoRSS                                                                GeoRSS
+## GPSTrackMaker                                                  GPSTrackMaker
+## VFK                                     Czech Cadastral Exchange Data Format
+## PGDUMP                                                   PostgreSQL SQL dump
+## OSM                                                OpenStreetMap XML and PBF
+## GPSBabel                                                            GPSBabel
+## SUA                          Tim Newport-Peace's Special Use Airspace Format
+## OpenAir                                                              OpenAir
+## OGR_PDS                                         Planetary Data Systems TABLE
+## WFS                                            OGC WFS (Web Feature Service)
+## WFS3                                  OGC WFS 3 client (Web Feature Service)
+## HTF                                             Hydrographic Transfer Vector
+## AeronavFAA                                                       Aeronav FAA
+## Geomedia                                                       Geomedia .mdb
+## EDIGEO                                         French EDIGEO exchange format
+## GFT                                                     Google Fusion Tables
+## SVG                                                 Scalable Vector Graphics
+## CouchDB                                                   CouchDB / GeoCouch
+## Cloudant                                                  Cloudant / CouchDB
+## Idrisi                                                  Idrisi Vector (.vct)
+## ARCGEN                                                     Arc/Info Generate
+## SEGUKOOA                                                SEG-P1 / UKOOA P1/90
+## SEGY                                                                   SEG-Y
+## XLS                                                          MS Excel format
+## ODS                     Open Document/ LibreOffice / OpenOffice Spreadsheet 
+## XLSX                                          MS Office Open XML spreadsheet
+## ElasticSearch                                                 Elastic Search
+## Walk                                                                    Walk
+## Carto                                                                  Carto
+## AmigoCloud                                                        AmigoCloud
+## SXF                                              Storage and eXchange Format
+## Selafin                                                              Selafin
+## JML                                                             OpenJUMP JML
+## PLSCENES                                              Planet Labs Scenes API
+## CSW                                   OGC CSW (Catalog  Service for the Web)
+## VDV                                      VDV-451/VDV-452/INTREST Data Format
+## GMLAS          Geography Markup Language (GML) driven by application schemas
+## MVT                                                      Mapbox Vector Tiles
+## TIGER                                                 U.S. Census TIGER/Line
+## AVCBin                                              Arc/Info Binary Coverage
+## AVCE00                                         Arc/Info E00 (ASCII) Coverage
+## NGW                                                              NextGIS Web
+## HTTP                                                   HTTP Fetching Wrapper
+##                write  copy   vsi
+## PCIDSK          TRUE FALSE  TRUE
+## netCDF          TRUE  TRUE  TRUE
+## PDS4            TRUE  TRUE  TRUE
+## JP2OpenJPEG    FALSE  TRUE  TRUE
+## PDF             TRUE  TRUE FALSE
+## MBTiles         TRUE  TRUE  TRUE
+## EEDA           FALSE FALSE FALSE
+## ESRI Shapefile  TRUE FALSE  TRUE
+## MapInfo File    TRUE FALSE  TRUE
+## UK .NTF        FALSE FALSE  TRUE
+## OGR_SDTS       FALSE FALSE  TRUE
+## S57             TRUE FALSE  TRUE
+## DGN             TRUE FALSE  TRUE
+## OGR_VRT        FALSE FALSE  TRUE
+## REC            FALSE FALSE FALSE
+## Memory          TRUE FALSE FALSE
+## BNA             TRUE FALSE  TRUE
+## CSV             TRUE FALSE  TRUE
+## NAS            FALSE FALSE  TRUE
+## GML             TRUE FALSE  TRUE
+## GPX             TRUE FALSE  TRUE
+## KML             TRUE FALSE  TRUE
+## GeoJSON         TRUE FALSE  TRUE
+## GeoJSONSeq      TRUE FALSE  TRUE
+## ESRIJSON       FALSE FALSE  TRUE
+## TopoJSON       FALSE FALSE  TRUE
+## Interlis 1      TRUE FALSE  TRUE
+## Interlis 2      TRUE FALSE  TRUE
+## OGR_GMT         TRUE FALSE  TRUE
+## GPKG            TRUE  TRUE  TRUE
+## SQLite          TRUE FALSE  TRUE
+## ODBC            TRUE FALSE FALSE
+## WAsP            TRUE FALSE  TRUE
+## PGeo           FALSE FALSE FALSE
+## MSSQLSpatial    TRUE FALSE FALSE
+## PostgreSQL      TRUE FALSE FALSE
+## OpenFileGDB    FALSE FALSE  TRUE
+## XPlane         FALSE FALSE  TRUE
+## DXF             TRUE FALSE  TRUE
+## CAD            FALSE FALSE  TRUE
+## Geoconcept      TRUE FALSE  TRUE
+## GeoRSS          TRUE FALSE  TRUE
+## GPSTrackMaker   TRUE FALSE  TRUE
+## VFK            FALSE FALSE FALSE
+## PGDUMP          TRUE FALSE  TRUE
+## OSM            FALSE FALSE  TRUE
+## GPSBabel        TRUE FALSE FALSE
+## SUA            FALSE FALSE  TRUE
+## OpenAir        FALSE FALSE  TRUE
+## OGR_PDS        FALSE FALSE  TRUE
+## WFS            FALSE FALSE  TRUE
+## WFS3           FALSE FALSE FALSE
+## HTF            FALSE FALSE  TRUE
+## AeronavFAA     FALSE FALSE  TRUE
+## Geomedia       FALSE FALSE FALSE
+## EDIGEO         FALSE FALSE  TRUE
+## GFT             TRUE FALSE FALSE
+## SVG            FALSE FALSE  TRUE
+## CouchDB         TRUE FALSE FALSE
+## Cloudant        TRUE FALSE FALSE
+## Idrisi         FALSE FALSE  TRUE
+## ARCGEN         FALSE FALSE  TRUE
+## SEGUKOOA       FALSE FALSE  TRUE
+## SEGY           FALSE FALSE  TRUE
+## XLS            FALSE FALSE FALSE
+## ODS             TRUE FALSE  TRUE
+## XLSX            TRUE FALSE  TRUE
+## ElasticSearch   TRUE FALSE FALSE
+## Walk           FALSE FALSE FALSE
+## Carto           TRUE FALSE FALSE
+## AmigoCloud      TRUE FALSE FALSE
+## SXF            FALSE FALSE  TRUE
+## Selafin         TRUE FALSE  TRUE
+## JML             TRUE FALSE  TRUE
+## PLSCENES       FALSE FALSE FALSE
+## CSW            FALSE FALSE FALSE
+## VDV             TRUE FALSE  TRUE
+## GMLAS          FALSE  TRUE  TRUE
+## MVT             TRUE FALSE  TRUE
+## TIGER           TRUE FALSE  TRUE
+## AVCBin         FALSE FALSE  TRUE
+## AVCE00         FALSE FALSE  TRUE
+## NGW             TRUE  TRUE FALSE
+## HTTP           FALSE FALSE FALSE
 ```
 
 Package **sf** provides handling of feature data, where feature
@@ -812,7 +992,7 @@ The `$` access operator lets us operate on a single column of the object as with
 hist(lux$ghsl_pop)
 ```
 
-![](s1_r_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](s1_r_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
 
 Using the attribute value to extract the name of the geometry column, and the `[[` access operator to give programmatic access to a column by name, we can see that the `"sfc"` object is composed of `POLYGON` objects:
 
@@ -983,7 +1163,7 @@ We'll also be able to look at the differences between population counts from thi
 plot(lux[, c("POPULATION", "ghsl_pop")])
 ```
 
-![](s1_r_files/figure-html/unnamed-chunk-31-1.png)<!-- -->
+![](s1_r_files/figure-html/unnamed-chunk-32-1.png)<!-- -->
 
 The trees are from https://data.public.lu/en/datasets/remarkable-trees/, but in projected, not geographical coordinates:
 
@@ -1007,16 +1187,17 @@ If we would like to find the areas of the administrative units, we could use sph
 
 ```r
 area_sph <- lwgeom::st_geod_area(lux)
-area_tmerc <- st_area(st_transform(lux, 2169))
+lux_tmerc <- st_transform(lux, 2169)
+area_tmerc <- st_area(lux_tmerc)
 ```
 
 There are small differences between these area outputs:
 
 
 ```r
-lux$area <- area_tmerc
-lux$area_err <- (lux$area - area_sph)/area_tmerc
-summary(lux$area_err)
+lux_tmerc$area <- area_tmerc
+lux_tmerc$area_err <- (lux_tmerc$area - area_sph)/lux_tmerc$area
+summary(lux_tmerc$area_err)
 ```
 
 ```
@@ -1027,16 +1208,16 @@ summary(lux$area_err)
 
 
 ```r
-plot(lux[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
+plot(lux_tmerc[, "area_err"], axes=TRUE, main="area difference in m2 per m2")
 ```
 
-![](s1_r_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
+![](s1_r_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
 
 The area is in square meters, so we can use facilities in **units** to change to square kilometers to calculate population densities:
 
 
 ```r
-units(lux$area)
+units(lux_tmerc$area)
 ```
 
 ```
@@ -1052,8 +1233,8 @@ units(lux$area)
 
 
 ```r
-units(lux$area) <- "km^2"
-units(lux$area)
+units(lux_tmerc$area) <- "km^2"
+units(lux_tmerc$area)
 ```
 
 ```
@@ -1069,8 +1250,8 @@ units(lux$area)
 
 
 ```r
-lux$pop_den <- lux$POPULATION/lux$area
-summary(lux$pop_den)
+lux_tmerc$pop_den <- lux_tmerc$POPULATION/lux_tmerc$area
+summary(lux_tmerc$pop_den)
 ```
 
 ```
@@ -1080,8 +1261,8 @@ summary(lux$pop_den)
 
 
 ```r
-lux$ghsl_den <- lux$ghsl_pop/lux$area
-summary(lux$ghsl_den)
+lux_tmerc$ghsl_den <- lux_tmerc$ghsl_pop/lux_tmerc$area
+summary(lux_tmerc$ghsl_den)
 ```
 
 ```
@@ -1093,9 +1274,9 @@ We can do the same kinds of sourcing checks with the tree counts:
 
 
 ```r
-trees_sgbp <- st_intersects(st_transform(lux, 2169), trees)
+trees_sgbp <- st_intersects(lux_tmerc, trees)
 trees_cnt <- sapply(trees_sgbp, length)
-all.equal(trees_cnt, lux$tree_count)
+all.equal(trees_cnt, lux_tmerc$tree_count)
 ```
 
 ```
@@ -1147,7 +1328,7 @@ API point of view, this means that getCoordinateReferenceSystem()
 method in Geometry objects (for instance) needs to be replaced by a
 getCoordinateMetadata() method.
 
-
+The `projinfo` utility is available with the external PROJ library, so most likely not in general; this is for PROJ 6.1.1 (current as of writing):
 
 
 ```r
@@ -1329,4 +1510,152 @@ cat(system("projinfo -s EPSG:4326 -t EPSG:2169 -o PROJ", intern=TRUE), sep="\n")
 ## +proj=pipeline +step +proj=axisswap +order=2,1 +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=push +v_3 +step +proj=cart +ellps=WGS84 +step +inv +proj=molobadekas +x=-265.8867 +y=76.9851 +z=20.2667 +rx=0.33746 +ry=3.09264 +rz=-2.53861 +s=0.4598 +px=4103620.3943 +py=440486.4235 +pz=4846923.4558 +convention=coordinate_frame +step +inv +proj=cart +ellps=intl +step +proj=pop +v_3 +step +proj=tmerc +lat_0=49.8333333333333 +lon_0=6.16666666666667 +k=1 +x_0=80000 +y_0=100000 +ellps=intl +step +proj=axisswap +order=2,1
 ```
 
+### Raster
 
+The GHSL data from https://ghsl.jrc.ec.europa.eu/ and provided in the `ghsl_pop` column is not documented here (yet). Using the GeoTIFF file (which turns out to be `+proj=moll`), we can read using a GDAL driver, first into memory, then proxy:
+
+
+```r
+library(stars)
+```
+
+```
+## Loading required package: abind
+```
+
+```r
+system.time(ghsl0 <- read_stars("../data/ghsl.tiff", proxy=FALSE))
+```
+
+```
+##    user  system elapsed 
+##   0.004   0.001   0.006
+```
+
+```r
+ghsl0
+```
+
+```
+## stars object with 2 dimensions and 1 attribute
+## attribute(s):
+##    ghsl.tiff     
+##  Min.   :  0.00  
+##  1st Qu.:  0.00  
+##  Median :  0.00  
+##  Mean   : 10.68  
+##  3rd Qu.:  0.00  
+##  Max.   :588.57  
+##  NA's   :554     
+## dimension(s):
+##   from  to  offset delta                       refsys point values    
+## x    1 246  436750   250 +proj=moll +lon_0=0 +x_0=... FALSE   NULL [x]
+## y    1 309 5892750  -250 +proj=moll +lon_0=0 +x_0=... FALSE   NULL [y]
+```
+
+
+
+
+```r
+system.time(ghsl1 <- read_stars("../data/ghsl.tiff", proxy=TRUE))
+```
+
+```
+##    user  system elapsed 
+##   0.003   0.000   0.004
+```
+
+```r
+ghsl1
+```
+
+```
+## stars_proxy object with 1 attribute in file:
+## $ghsl.tiff
+## [1] "../data/ghsl.tiff"
+## 
+## dimension(s):
+##   from  to  offset delta                       refsys point values    
+## x    1 246  436750   250 +proj=moll +lon_0=0 +x_0=... FALSE   NULL [x]
+## y    1 309 5892750  -250 +proj=moll +lon_0=0 +x_0=... FALSE   NULL [y]
+```
+
+
+```r
+plot(ghsl0)
+```
+
+![](s1_r_files/figure-html/unnamed-chunk-51-1.png)<!-- -->
+
+Using the aggregate method on the input raster in memory warped to the Luxembourg transverse Mercator projection, by the municipality boundaries in `lux_tmerc`, we can recover the population counts. 
+
+
+```r
+system.time(ghsl_sum0 <- aggregate(st_warp(ghsl0, crs=2169, cellsize=250, use_gdal=FALSE), lux_tmerc, sum))
+```
+
+```
+##    user  system elapsed 
+##   0.766   0.023   0.791
+```
+
+Using the proxy in this case takes about the same time:
+
+
+```r
+system.time(ghsl_sum1 <- aggregate(st_warp(ghsl1, crs=2169, cellsize=250, use_gdal=FALSE), lux_tmerc, sum))
+```
+
+```
+##    user  system elapsed 
+##   0.680   0.009   0.691
+```
+
+
+```r
+system.time(ghsl_sum2 <- aggregate(ghsl0, st_transform(lux, crs=st_crs(ghsl0)$proj4string), sum))
+```
+
+```
+##    user  system elapsed 
+##   0.532   0.003   0.537
+```
+
+The output values following warping are closely aligned with, but differ a little from those included in the vector object read to begin with; it looks as though the vector object was transformed to match the raster before aggregation:
+
+
+```r
+summary(cbind(orig=lux_tmerc$ghsl_pop, warp=ghsl_sum0$ghsl.tiff, warp_proxy=ghsl_sum1$ghsl.tiff, moll=ghsl_sum2$ghsl.tiff))
+```
+
+```
+##       orig               warp          warp_proxy          moll         
+##  Min.   :   815.1   Min.   :   806   Min.   :   806   Min.   :   815.1  
+##  1st Qu.:  1726.2   1st Qu.:  1679   1st Qu.:  1679   1st Qu.:  1726.2  
+##  Median :  3072.4   Median :  2953   Median :  2953   Median :  3072.4  
+##  Mean   :  5542.2   Mean   :  5524   Mean   :  5524   Mean   :  5542.2  
+##  3rd Qu.:  5190.2   3rd Qu.:  5519   3rd Qu.:  5519   3rd Qu.:  5190.2  
+##  Max.   :106144.0   Max.   :103598   Max.   :103598   Max.   :106144.0
+```
+
+
+```r
+lux_tmerc$ghsl_tiff <- ghsl_sum0$ghsl.tiff
+lux_tmerc$ghsl_warp_diff <- lux_tmerc$ghsl_tiff - lux_tmerc$ghsl_pop
+plot(lux_tmerc[,"ghsl_warp_diff"])
+```
+
+![](s1_r_files/figure-html/unnamed-chunk-56-1.png)<!-- -->
+
+
+```r
+st_write(lux_tmerc, "../data/lux_tmerc.gpkg", delete_dsn=TRUE)
+```
+
+```
+## Deleting source `../data/lux_tmerc.gpkg' using driver `GPKG'
+## Writing layer `lux_tmerc' to data source `../data/lux_tmerc.gpkg' using driver `GPKG'
+## features:       102
+## fields:         16
+## geometry type:  Multi Polygon
+```
