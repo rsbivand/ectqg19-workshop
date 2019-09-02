@@ -1,0 +1,190 @@
+---
+title: "R: Interoperability"
+author: "Roger Bivand"
+date: "Thursday, 5 September 2019, 16:18-16:30"
+output: 
+  html_document:
+    keep_md: true
+bibliography: rmd.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Use R for comparison
+
+```{r}
+library(sf)
+col_file <- system.file("shapes/columbus.shp", package="spData")[1]
+col_sf <- st_read(col_file, quiet=TRUE)
+names(col_sf)
+```
+```{r, warning=FALSE}
+library(tmap)
+tm_shape(col_sf) + tm_fill("CRIME", style="pretty")
+```
+
+### Create spatial weights
+
+```{r}
+library(spdep)
+nb_sf <- poly2nb(col_sf)
+nb_sf
+```
+```{r}
+lw <- nb2listw(nb_sf, style="W")
+```
+
+### ESDA
+
+```{r}
+moran.test(col_sf$CRIME, lw)
+```
+
+```{r}
+loc_I_sf <- localmoran(col_sf$CRIME, lw)
+sum(loc_I_sf[,"Ii"])/Szero(lw)
+```
+```{r, warning=FALSE}
+col_sf$Ii <- loc_I_sf[,"Ii"]
+tm_shape(col_sf) + tm_fill("Ii", midpoint=0, style="pretty")
+```
+
+### Spatial regression
+
+```{r, warning=FALSE, message=FALSE}
+library(spatialreg)
+ev <- eigenw(lw)
+```
+
+```{r}
+err <- errorsarlm(CRIME ~ INC + HOVAL, data=col_sf, listw=lw, method="eigen", control=list(pre_eig=ev))
+summary(err)
+```
+
+### Impacts
+
+```{r}
+lag <- lagsarlm(CRIME ~ INC + HOVAL, data=col_sf, listw=lw, method="eigen", control=list(pre_eig=ev))
+summary(impacts(lag, R=2000, evalues=ev), short=TRUE, zstats=TRUE)
+```
+### Write GAL file
+
+```{r}
+td <- tempdir()
+tf <- file.path(td, "col_queen.gal")
+write.nb.gal(nb_sf, tf)
+```
+
+## Using **reticulate** to run Python from R in an R markdown notebook
+
+
+```{r}
+library(reticulate)
+use_python(python='/usr/bin/python3')
+py_config()
+```
+
+```{r}
+pkgr <- import("pkg_resources")
+np <- import("numpy")
+pkgr$get_distribution("numpy")$version
+libpysal <- import("libpysal")
+pkgr$get_distribution("libpysal")$version
+gpd <- import("geopandas")
+pkgr$get_distribution("geopandas")$version
+col_ps <- gpd$read_file(col_file)
+```
+
+### Passing `shapely` geometries to **sf**
+
+```{r}
+shapely <- import("shapely")
+pkgr$get_distribution("shapely")$version
+oo <- st_as_sf(data.frame(unlist(lapply(col_ps$geometry, shapely$wkt$dumps))), wkt=1)
+plot(st_geometry(oo))
+```
+### Read GAL file
+
+```{r}
+nb_ps <- libpysal$weights$Queen$from_dataframe(col_ps)
+nb_gal_ps <- libpysal$io$open(tf)$read()
+```
+
+### ESDA
+
+```{r}
+esda <- import("esda")
+pkgr$get_distribution("esda")$version
+y <- np$array(col_ps[,"CRIME"])
+mi <- esda$Moran(y, nb_ps, two_tailed=FALSE)
+mi$I
+```
+
+```{r}
+mi <- esda$Moran(y, nb_gal_ps, two_tailed=FALSE)
+mi$I
+```
+
+```{r}
+loc_I_ps <- esda$Moran_Local(y, nb_ps)
+col_ps["Is"] <- loc_I_ps$Is
+```
+
+### Spatial regression
+
+```{r}
+spreg <- import("spreg")
+pkgr$get_distribution("spreg")$version
+x <- np$array(col_ps[, c("INC", "HOVAL")])
+y <- matrix(y, ncol=1)
+mlerr_ps <- spreg$ML_Error(y, x, nb_ps)
+```
+
+### Comparison
+
+```{r}
+rbind(R=coefficients(err)[c(2:4,1)], PySAL=c(mlerr_ps$betas))
+```
+
+## Python directly in R markdown
+
+### Read shapefile
+
+```{python, engine.path = '/usr/bin/python3'}
+import numpy as np
+import libpysal as libpysal
+import geopandas as gpd
+col_ps = gpd.read_file('/home/rsb/lib/r_libs/spData/shapes/columbus.shp')
+```
+
+### Create weights
+
+```{python, engine.path = '/usr/bin/python3'}
+nb_ps = libpysal.weights.Queen.from_dataframe(col_ps)
+nb_ps.cardinalities
+```
+
+### ESDA
+
+```{python, engine.path = '/usr/bin/python3'}
+import esda as esda
+mi = esda.Moran(col_ps[['CRIME']].values, nb_ps, two_tailed='false')
+mi.I
+```
+
+### Spatial regression
+
+```{python, engine.path = '/usr/bin/python3', warning=FALSE}
+import spreg as spreg
+mlerr_ps = spreg.ML_Error(col_ps[['CRIME']].values, col_ps[['INC', 'HOVAL']].values, nb_ps)
+mlerr_ps.betas
+```
+
+
+
+
+
