@@ -37,6 +37,8 @@ $$
 
 Inference through *permutations*
 
+![](../figs/moran_inference.png)
+
 ## Local
 
 Cluster*ing* Vs Cluster*s*
