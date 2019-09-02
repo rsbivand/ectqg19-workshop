@@ -29,6 +29,8 @@ x > 0 &\mbox{ if $i$ and $j$ are neighbors} \\
 \end{array} \right\}
 $$
 
+**NOTE** - $w_{ij}$ is usually *standardised*
+
 ![](https://geographicdata.science/book/images/notebooks/04_spatial_weights_4_0.png)
 
 **Quiz** 
