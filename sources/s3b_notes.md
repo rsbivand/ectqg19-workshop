@@ -2,7 +2,7 @@
 
 ## Spatial Lag
 
-Product of a spatial weights matrix W and a given variably Y
+Product of a spatial weights matrix W and a given variable Y
 
 $$
 Y_{sl} = WY
@@ -14,9 +14,11 @@ $$
 
 ## Global
 
+This is the pitch, but it isn't helpful: the reification of autocorrelation actually obscures model mis-specification - there may be no autocorrelation at all in a properly specified mean model.
+
 > *Everything is related to everything else, but near things are more related than distant things*
 
-Tobler (1,970)
+Tobler (1970, contradicted by Gunnar Olsson in the same issue of *Economic Geography*)
 
 [![Binder](http://mybinder.org/badge.svg)](http://mybinder.org/repo/darribas/int_sp_auto)
 
@@ -39,6 +41,8 @@ Inference through *permutations*
 
 ![](../figs/moran_inference.png)
 
+This is wrong, the original inference based on analytical randomisation is fine, permutations give no benefit. Exact and saddlepoint approximation inference is also available.
+
 ## Local
 
 Cluster*ing* Vs Cluster*s*
@@ -54,8 +58,12 @@ $$
 
 Inference through *permutations*
 
+Again, this is wrong, exact or saddlepoint is adequate, but permutation is definitely wrong. The real problem is mean model mis-specification, and omitting global autocorrelation when testing for local autocorrelation. Not to mention multiple comparisons!
+
 ## Sources
 
+* [SDSR](https://keen-swartz-3146c4.netlify.com/area-data-and-spatial-autcorrelation.html)
+* [Test: Bivand and Wong, 2018](https://rdcu.be/bLVB4), (http://dx.doi.org/10.1007/s11749-018-0599-x)
 * [GDS Book - Global chapter](https://geographicdata.science/book/notebooks/06_spatial_autocorrelation.html)
 * [GDS Book - Local chapter](https://geographicdata.science/book/notebooks/07_local_autocorrelation.html)
 * [GDS'19 - Spatial Autocorrelation lecture](http://darribas.org/gds19/notes/Class_06.html)
