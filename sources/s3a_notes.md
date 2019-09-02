@@ -29,19 +29,7 @@ x > 0 &\mbox{ if $i$ and $j$ are neighbors} \\
 \end{array} \right\}
 $$
 
-... **what is a *neighbor*?**
-
-## How?
-
 ![](https://geographicdata.science/book/images/notebooks/04_spatial_weights_4_0.png)
-
-- "Next door": Contiguity-based Ws
-- "Close": Distance-based Ws
-- "In the same 'place'": Block weights
-
-### Contiguity
-
-![](https://geographicdata.science/book/images/notebooks/04_spatial_weights_8_0.png)
 
 **Quiz** 
 
@@ -54,6 +42,20 @@ What is the dimension of the $W$ for the image above?
 1. None of the above
 
 [[Answer](https://geographicdata.science/book/notebooks/04_spatial_weights.html#Contiguity-Weights)]
+
+## How?
+
+... **what is a *neighbor*?**
+
+- "Next door": Contiguity-based Ws
+- "Close": Distance-based Ws
+- "In the same 'place'": Block weights
+
+### Contiguity
+
+![](https://geographicdata.science/book/images/notebooks/04_spatial_weights_8_0.png)
+
+![](https://geographicdata.science/book/images/notebooks/04_spatial_weights_16_0.png)
 
 ### Distance
 
