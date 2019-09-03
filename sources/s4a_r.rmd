@@ -1,0 +1,40 @@
+---
+title: 'R: Spatial regression'
+author: "Roger Bivand"
+date: "Thursday, 5 September 2019, 15:12-15:36"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+link-citations: yes
+bibliography: rmd.bib
+---
+
+### Required current contributed CRAN packages:
+
+I am running R 3.6.1, with recent `update.packages()`.
+
+```{r, echo=TRUE}
+needed <- c("sf", "stars", "sp", "classInt", "raster", "colorspace", "RColorBrewer", "ggplot2", "cartography", "tmap", "mapview")
+```
+
+### Beijing data set
+
+```{r}
+library(HSAR)
+library(sp)
+data(landSPDF)
+data(landprice)
+data(Beijingdistricts)
+```
+
+
+```{r}
+library(sf)
+land_sf <- st_as_sf(landSPDF)
+landprice_sf <- merge(land_sf, landprice, by="obs")
+all.equal(landprice_sf$district.id.x, landprice_sf$district.id.y)
+```
+
+
+

@@ -1,12 +1,12 @@
 ---
-title: "R: Interoperability"
+title: 'R: Interoperability'
 author: "Roger Bivand"
 date: "Thursday, 5 September 2019, 16:18-16:30"
-output: 
-  html_document:
-    keep_md: true
-bibliography: rmd.bib
+output:
+  pdf_document: default
+  html_document: null
 link-citations: yes
+bibliography: rmd.bib
 ---
 
 ```{r setup, include=FALSE}
