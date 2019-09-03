@@ -20,8 +20,6 @@ This is the pitch, but it isn't helpful: the reification of autocorrelation actu
 
 Tobler (1970, contradicted by Gunnar Olsson in the same issue of *Economic Geography*)
 
-[![Binder](http://mybinder.org/badge.svg)](http://mybinder.org/repo/darribas/int_sp_auto)
-
 [`URL`](http://mybinder.org/repo/darribas/int_sp_auto)
 
 ### Moran Plot
