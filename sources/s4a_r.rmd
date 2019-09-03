@@ -3,9 +3,8 @@ title: 'R: Spatial regression'
 author: "Roger Bivand"
 date: "Thursday, 5 September 2019, 15:12-15:36"
 output:
-  html_document:
-    keep_md: yes
   pdf_document: default
+  html_document:
 link-citations: yes
 bibliography: rmd.bib
 ---
@@ -15,7 +14,7 @@ bibliography: rmd.bib
 I am running R 3.6.1, with recent `update.packages()`.
 
 ```{r, echo=TRUE}
-needed <- c("sf", "stars", "sp", "classInt", "raster", "colorspace", "RColorBrewer", "ggplot2", "cartography", "tmap", "mapview")
+needed <- c("MatrixModels", "lme4", "spatialreg", "spdep", "sf", "sp", "HSAR")
 ```
 
 ### Beijing data set

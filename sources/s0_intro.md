@@ -195,13 +195,13 @@ If you wish, install [RStudio Desktop](https://www.rstudio.com/products/rstudio/
 
 Start R (or the R console in RStudio) and install packages as specified at the head of the s*_r.html packages from the command line with `install.packages()` if necessary. A complete list of these packages will also be posted here. If your R installation is up to date (you ran `update.packages()` recently), you may already have some or most of the required packages installed.
 
-An incomplete list and installation script as of 18:00, 3 September, is:
+An incomplete list and installation script as of 00:00, 4 September, is:
 
 ```
 update.packages() # to update installed but stale packages
 PACKAGES <- c("sf", "stars", "sp", "classInt", "raster", "colorspace",
  "RColorBrewer", "ggplot2", "cartography", "tmap", "mapview", "lwgeom",
- "spdep", "spatialreg", "HSAR")
+ "spdep", "spatialreg", "MatrixModels", "lme4", "HSAR")
 inst <- match(PACKAGES, .packages(all=TRUE))
 need <- which(is.na(inst)) # see what is not yet installed and
 if (length(need) > 0) install.packages(PACKAGES[need]) # install from chosen mirror
