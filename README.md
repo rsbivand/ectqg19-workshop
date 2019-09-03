@@ -1,5 +1,7 @@
 # ectqg19-workshop
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rsbivand/ectqg19-workshop/master)
+
 R&Py Spatial Analysis Workshop, 5 September 2019: European Colloquium on Theoretical and Quantitative Geography
 
 ### Summary text
