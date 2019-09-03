@@ -15,7 +15,9 @@ pack: outline
 	cp -r sources pack/sources
 	rm -rf pack/sources/.ipynb_checkpoints
 	cp -r data pack/data
+	rm -rf pack/data/.ipynb_checkpoints
 	cp -r figs pack/figs
+	rm -rf pack/figs/.ipynb_checkpoints
 	######################### 
 	# 			PDF 
 	######################### 
