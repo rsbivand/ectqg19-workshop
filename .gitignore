@@ -10,5 +10,8 @@
 raw_data/
 raw_data/*
 
+src_data
+src_data/*
+
 data/src_data
 data/src_data/*
