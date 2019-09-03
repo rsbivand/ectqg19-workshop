@@ -3,39 +3,75 @@ outline: sources/s0_intro.md
 			-V fontsize=12pt \
 			-V geometry="margin=1in" \
 			-s sources/s0_intro.md -o outline.pdf
-pack:
+test:
+	rm -rf pack/
 	mkdir pack
-	# 			PDF
+	mkdir pack/sources
+	cp -r sources/* pack/sources/
+pack: outline
+	rm -rf pack/
+	mkdir pack
+	# sources/data/figs
+	cp -r sources pack/sources
+	rm -rf pack/sources/.ipynb_checkpoints
+	cp -r data pack/data
+	cp -r figs pack/figs
+	######################### 
+	# 			PDF 
+	######################### 
 	mkdir pack/pdf
 	## Convert Markdown notes
-	for MDFILE in $(ls sources/*.md); \
+	for MDFILE in $$(cd sources && ls *.md); \
 	do \
-		cd sources && pandoc -V mainfont='Palatino' \
-							 -V fontsize=12pt \
-							 -V geometry="margin=1in" \
-							 -s $MDFILE -o ${$MDFILE/".md"/".pdf"}; \
-	done
-###### Convert jupyter notebooks
-####cd sources && jupyter nbconvert --to pdf *.ipynb
-####mv notebooks/*.pdf pack/pdf/
-####cd notebooks && rm -fR -- */
-###### Convert R notebooks
-##### 			HTML
-####mkdir pack/html
-###### Convert Markdown notes
-###### Convert jupyter notebooks
-####cd notebooks && jupyter nbconvert --to html *.ipynb
-####mv notebooks/*.html pack/html
-###### Convert R notebooks
-#####---
-####mkdir pack/sources
-####cp sources/*.ipynb pack/sources
-####cp -r data pack/data
-####cp -r figs pack/figs
-####cp outline.pdf pack/outline.pdf
-####cp LICENSE pack/LICENSE
-####zip -r pack_new.zip pack
-####mv pack_new.zip pack.zip
-####rm -r pack
-####rm outline.pdf
+	echo "\nConverting $$MDFILE to PDF"; \
+	cd $$HOME/work/sources && \
+	pandoc -V mainfont='Palatino' \
+		   -V fontsize=12pt \
+		   -V geometry="margin=1in" \
+		   --metadata pagetitle="$$(echo $$MDFILE | sed "s/.md//")" \
+		   --bibliography rmd.bib \
+		   --filter pandoc-citeproc \
+		   -s $$MDFILE \
+		   -o $$(echo $$MDFILE | sed "s/.md/.pdf/"); \
+	done;
+	## Convert jupyter notebooks
+	for NBFILE in $$(cd sources && ls *.ipynb); \
+	do \
+		echo "Converting $$NBFILE to PDF"; \
+		cd $$HOME/work/sources && \
+		jupyter nbconvert --to pdf $$NBFILE ; \
+	done;	
+	## Move them to pack
+	mv sources/*.pdf pack/pdf/
+	######################### 
+	# 			HTML
+	######################### 
+	mkdir pack/html
+	## Convert Markdown notes
+	for MDFILE in $$(ls sources/*.md); \
+	do \
+	echo "Converting $$MDFILE to HTML"; \
+	pandoc -V mainfont='Palatino' \
+		   -V fontsize=12pt \
+		   -V geometry="margin=1in" \
+		   --metadata pagetitle="$$(echo $$MDFILE | sed "s/.md//")" \
+		   --bibliography sources/rmd.bib \
+		   --filter pandoc-citeproc \
+		   -s $$MDFILE \
+		   -o $$(echo $$MDFILE | sed "s/.md/.html/"); \
+	done;
+	## Convert jupyter notebooks
+	for NBFILE in $$(ls sources/*.ipynb); \
+	do \
+		echo "Converting $$NBFILE to HTML"; \
+		jupyter nbconvert --to html --output-dir sources $$NBFILE ; \
+	done;	
+	## Move them to pack
+	mv sources/*.html pack/html/
+	#				Package
+	mv outline.pdf pack/outline.pdf
+	cp LICENSE pack/LICENSE
+	zip -r pack_new.zip pack
+	mv pack_new.zip pack.zip
+	rm -r pack
 
