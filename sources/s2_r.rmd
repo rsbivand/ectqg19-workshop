@@ -1,12 +1,13 @@
 ---
-title: "R: Visualization"
+title: 'R: Visualization'
 author: "Roger Bivand"
 date: "Thursday, 5 September 2019, 11:35-12:00"
-output: 
+output:
+  pdf_document: default
   html_document:
-    keep_md: true
-bibliography: rmd.bib
+    keep_md: yes
 link-citations: yes
+bibliography: rmd.bib
 ---
 
 ```{r setup, include=FALSE}

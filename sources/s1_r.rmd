@@ -1,12 +1,12 @@
 ---
-title: "R: Data structures"
+title: 'R: Data structures'
 author: "Roger Bivand"
 date: "Thursday, 5 September 2019, 09:45-10:15"
-output: 
-  html_document:
-    keep_md: true
-bibliography: rmd.bib
+output:
+  pdf_document: default
+  html_document: null
 link-citations: yes
+bibliography: rmd.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -463,9 +463,9 @@ Following the introduction of geodetic modules and pipelines in PROJ 5 [@knudsen
 
 There are very useful postings on the PROJ mailing list from Martin Desruisseaux, first [proposing clarifications](https://lists.osgeo.org/pipermail/proj/2019-July/008748.html) and a [follow-up](https://lists.osgeo.org/pipermail/proj/2019-August/008750.html) including a summary:
 
-> * "Early binding" ≈ hub transformation technique.
+> * "Early binding": hub transformation technique.
 
-> * "Late binding" ≈ hub transformation technique NOT used, replaced by
+> * "Late binding": hub transformation technique NOT used, replaced by
 a more complex technique consisting in searching parameters in the
 EPSG database after the transformation context (source, target,
 epoch, area of interest) is known.
