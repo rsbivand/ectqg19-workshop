@@ -107,6 +107,8 @@ pkgr$get_distribution("shapely")$version
 oo <- st_as_sf(data.frame(unlist(lapply(col_ps$geometry, shapely$wkt$dumps))), wkt=1)
 plot(st_geometry(oo))
 ```
+
+
 ### Read GAL file
 
 ```{r}
