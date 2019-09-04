@@ -68,6 +68,11 @@ pack: outline
 	done;	
 	## Move them to pack
 	mv sources/*.html pack/html/
+	######################### 
+	# 			R scripts
+	######################### 
+	mkdir pack/R
+	mv sources/*.R pack/R/
 	#				Package
 	mv outline.pdf pack/outline.pdf
 	cp LICENSE pack/LICENSE
