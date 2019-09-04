@@ -9,13 +9,14 @@ link-citations: yes
 bibliography: rmd.bib
 ---
 
-
+## Spatial autocorrelation
 
 ```{r}
 library(sf)
 lux <- st_read("../data/lux_tmerc.gpkg")
 ```
 
+Contiguity Queen neighbours
 
 ```{r}
 library(spdep)
@@ -24,15 +25,21 @@ lw_B <- nb2listw(nb_cont, style="B")
 lw_W <- nb2listw(nb_cont) # default style="W"
 ```
 
+### Global spatial autocorrelation
+
+Basic global Moran's $I$ test under randomisation (analytical permutation, differs from test under normality by a kurtosis term in the variance), first with binary weights
 
 ```{r}
 moran.test(lux$light_level, listw=lw_B, randomisation=TRUE, alternative="two.sided")
 ```
 
+Next with row standardised weights
 
 ```{r}
-moran.test(lux$light_level, listw=lw_W, randomisation=TRUE, alternative="two.sided")
+(mi <- moran.test(lux$light_level, listw=lw_W, randomisation=TRUE, alternative="two.sided"))
 ```
+
+The permutation test gives very similar outcomes to the standard test under randomisation
 
 ```{r}
 set.seed(1)
@@ -41,32 +48,144 @@ c(mean=mean(perm_boot$t), var=var(perm_boot$t))
 plot(perm_boot)
 ```
 
+Under normality, the outcome is also similar despite kurtosis playing a role
 
+```{r}
+moran(lux$light_level, listw=lw_W, S0=Szero(lw_W), n=nrow(lux))$K
+```
+
+
+```{r}
+moran.test(lux$light_level, listw=lw_W, randomisation=FALSE, alternative="two.sided")
+```
+
+The test for regression residuals for a null model (intercept only) is the same as the basic test under normality
+
+```{r}
+OLS0 <- lm(light_level ~ 1, lux)
+lm.morantest(OLS0, listw=lw_W, alternative="two.sided")
+```
+
+All the tests so far depend on assumptions, so calculating the exact variance may give different results
+
+```{r}
+lm.morantest.exact(OLS0, listw=lw_W, alternative="two.sided")
+```
+
+The Moran scatterplot shows the by observation relationship between the observed values and their spatial lags. The marked points are observations exerting stronger influence on the linear Moran relationship
 
 ```{r}
 moran.plot(lux$light_level, listw=lw_W)
 ```
-
+But maybe this autocorrelation is rather driven by a missing covariate in the mean model. The basic test is of a mean model including only the intercept, the mean of the variable being tested. If we include a relevant covariate such here as population density with a similar spatial footprint to the variable of interest, conclusions may change
 
 ```{r}
 OLS <- lm(light_level ~  pop_den, lux)
 summary(OLS)
 ```
 
+As we can see, there is much less autocorrelation in the residuals of an updated mean model
+
 ```{r}
 lm.morantest(OLS, listw=lw_W, alternative="two.sided")
 ```
+
+And using the exact test, there is little spatial autocorrelation left
+
+```{r}
+(mie <- lm.morantest.exact(OLS, listw=lw_W, alternative="two.sided"))
+```
+
+We can also see that the slope of the Moran relationship is much flatter
 
 ```{r}
 moran.plot(residuals(OLS), listw=lw_W)
 ```
 
+### Local autocorrelation
+
+There are a number of functions in R to calculate local Moran's $I_i$, inclusing the standard measure with variances calculated under randomisation. The sum of the local Moran's $I_i$ values divided by the sum of the weights is the same as the value of global Moran's $I$
+
 ```{r}
 locm <- localmoran(lux$light_level, listw=lw_W, alternative="two.sided")
-lux$locIz <- locm[,4]
-plot(lux[,"locIz"])
+all.equal(sum(locm[,1])/Szero(lw_W), mi$estimate[1], check.attributes=FALSE)
 ```
 
+Plots will show indicator standard deviates; not that most "hot-spot"/"cluster" maps forget that probability values must be adjusted for the false discovery rate due to multiple comparison. For this reason **spdep** does not offer such potentially misleading functionalities
 
+```{r}
+lux$locIz <- locm[,4]
+plot(lux[,"locIz"], breaks=seq(-6, 12, 2))
+```
 
+It is possible to bootstrap this measure by sampling from the complete set of observations omitting the observation of interest, but this is not (yet) provided as there are better alternatives (saddlepoint approximation and exact computations offering possibly richer mean models *and* the removal of global spatial autocorrelation which pollutes local measures); here is a roll-your-own bootstrap
 
+```{r}
+x <- lux$light_level
+lw <- lw_W
+xx <- mean(x)
+z <- x - xx
+s2 <- sum(z^2)/length(x)
+crd <- card(lw$neighbours)
+nsim <- 999
+res_p <- numeric(nsim)
+mns <- sds <- numeric(length(x))
+set.seed(1)
+for (i in seq(along=x)) {
+  wtsi <- lw$weights[[i]]
+  zi <- z[i]
+  z_i <- z[-i]
+  crdi <- crd[i]
+  if (crdi > 0) {
+    for (j in 1:nsim) {
+      sz_i <- sample(z_i, size=crdi)
+      lz_i <- sum(sz_i*wtsi)
+      res_p[j] <- (zi/s2)*lz_i
+    }
+    mns[i] <- mean(res_p)
+    sds[i] <- sd(res_p)
+  } else {
+    mns[i] <- as.numeric(NA)
+    sds[i] <- as.numeric(NA)
+  }
+}
+lux$perm_Zi <- (locm[,1] - mns)/sds
+plot(lux[, "perm_Zi"], breaks=seq(-6, 12, 2))
+```
+
+The exact measures are more comptationally intensive, but are well supported in theory
+
+```{r}
+locm_ex <- localmoran.exact(OLS0, nb=nb_cont, style="W", alternative="two.sided")
+lux$locmz_ex <- as.data.frame(locm_ex)[,4]
+plot(lux[,"locmz_ex"], breaks=seq(-6, 12, 2))
+```
+
+It is better to use the exact measures for the upgraded mean model including the population density; moderate or small global residual autocorrelation may mask local spatial association, even though the summation relationship stil holds
+
+```{r}
+locm_pop_den_ex <- as.data.frame(localmoran.exact(OLS, nb=nb_cont, style="W", alternative="two.sided"))
+all.equal(sum(locm_pop_den_ex[,1])/Szero(lw_W), mie$estimate[1], check.attributes=FALSE)
+```
+
+```{r}
+lux$locmz_pd_ex <- locm_pop_den_ex[,4]
+plot(lux[,"locmz_pd_ex"], breaks=seq(-6, 12, 2))
+```
+
+### Spatial heterogeneity statistic
+
+The latest addition to local indicators of spatial mis-specification is LOSH, directed at showing spatial heteroskedasticity (local variations in value variability); here the standard deviate of the measure
+
+```{r}
+LOSH <- LOSH.cs(lux$light_level, listw=lw_W)
+lux$Z.Hi <- LOSH[,4]
+plot(lux[,"Z.Hi"])
+```
+
+These also offer a spatially smoothed view of the variable of interest
+
+```{r}
+lux$x_bar_i <- LOSH[,5]
+plot(lux[,"x_bar_i"])
+```
