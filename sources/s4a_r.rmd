@@ -47,7 +47,7 @@ all.equal(landprice_sf$district.id.x, landprice_sf$district.id.y)
 
 Create the original 1.5 km distance threshold spatial weights, with a few no-neighbour observations (so set zero policy option)
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(spatialreg)
 dnb1.5 <- spdep::dnearneigh(landprice_sf, 0, 1500, row.names=as.character(landprice_sf$obs))
 dnb1.5
