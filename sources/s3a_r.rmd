@@ -1,0 +1,103 @@
+---
+title: 'R: Spatial weights'
+author: "Roger Bivand"
+date: "Thursday, 5 September 2019, 13:40-13:50"
+output:
+  pdf_document: default
+  html_document:
+link-citations: yes
+bibliography: rmd.bib
+---
+
+## Spatial weights
+
+
+```{r}
+library(sf)
+lux <- st_read("../data/lux_tmerc.gpkg")
+```
+
+### Contiguity neighbours and `nb` neighbour objects and methods
+
+```{r}
+library(spdep)
+nb_cont <- poly2nb(lux, row.names=as.character(lux$LAU2))
+nb_cont
+```
+```{r}
+summary(nb_cont)
+```
+
+```{r}
+hist(card(nb_cont))
+```
+
+
+```{r}
+plot(st_geometry(lux), border="grey")
+crds <- st_centroid(st_geometry(lux))
+plot(nb_cont, crds, add=TRUE)
+```
+
+### Point geometries should be planar, not spherical (example with k nearest neighbours)
+
+```{r}
+knn5 <- knn2nb(knearneigh(crds, k=5))
+knn5
+```
+
+```{r}
+knn5s <- knn2nb(knearneigh(crds, k=5), sym=TRUE)
+knn5s
+```
+
+Do not use geographical coordinates for KNN unless you use Great Circle distances, here the need for GC distances is detected from the CRS of the object, so the neighbours are the same as with projected points
+
+```{r}
+knn5_ll <- knn2nb(knearneigh(st_transform(crds, 4326), k=5))
+knn5_ll
+```
+
+```{r}
+all.equal(knn5, knn5_ll, check.attributes=FALSE)
+```
+
+
+```{r}
+knn5_ll_eucl <- knn2nb(knearneigh(st_coordinates(st_transform(crds, 4326)), k=5))
+knn5_ll_eucl
+```
+
+```{r}
+isTRUE(all.equal(knn5, knn5_ll_eucl, check.attributes=FALSE))
+```
+
+The orange neighbours are added or cut by using the wrong distance metric
+
+```{r}
+plot(st_geometry(lux), border="grey")
+plot(knn5, crds, add=TRUE)
+plot(diffnb(knn5, knn5_ll_eucl), crds, add=TRUE, col="orange")
+```
+
+### Weights
+
+The `nb2listw()` function is used to construct an `listw` spatial weights object from an `nb` neighbour object, possibly working around no-neighbour observations, adding edge weights and choosing the style
+
+```{r}
+args(nb2listw)
+```
+
+
+```{r}
+lw_B <- nb2listw(nb_cont, style="B")
+lw_B
+```
+
+
+```{r}
+lw_W <- nb2listw(nb_cont) # default style="W"
+lw_W
+```
+
+

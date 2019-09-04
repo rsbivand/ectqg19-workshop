@@ -1,0 +1,12 @@
+---
+title: 'R: Spatial autocorrelation'
+author: "Roger Bivand"
+date: "Thursday, 5 September 2019, 14:15-14:30"
+output:
+  pdf_document: default
+  html_document:
+link-citations: yes
+bibliography: rmd.bib
+---
+
+
