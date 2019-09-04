@@ -21,6 +21,116 @@ I am running R 3.6.1, with recent `update.packages()`.
 needed <- c("sf", "stars", "lwgeom")
 ```
 
+## Help, examples and built-in datasets in R
+
+- In RStudio, the Help tab in the lower right pane (default position) gives access to the R manuals and to the installed packages help pages through the Packages link under Reference
+
+- In R itself, help pages are available in HTML (browser) and text form; `help.start()` uses the default browser to display the Manuals, Reference and Miscellaneous Material sections in RStudio's home help tab
+
+- The search engine can be used to locate help pages, but is not great if many packages are installed, as no indices are stored 
+
+- The help system needs to be learned in order to provide the user with ways of progressing without wasting too much time
+
+- The base help system does not tell you how to use R as a system, about packages not installed on your machine, or about R as a community
+
+- It does provide information about functions, methods and (some) classes in base R and in contributed packages installed on your machine
+
+- There are different requirements with regard to help systems --- in R, the help pages of base R are expected to be accurate although terse
+
+### Help pages
+
+- Each help page provides a short description of the functions, methods or classes it covers; some pages cover more than one such
+
+- Help pages are grouped by package, so that the browser-based system is not easy to browse if you do not know which package a function belongs to
+
+- The usage of the function is shown explicitly, including any defaults for arguments to functions or methods
+
+- Each argument is described, showing names and types; in addition details of the description are given, together with the value returned
+
+### Interactive use of help pages
+
+- Rather than starting from the packages hierarchy of help pages, users most often use the `help()` function
+
+- The function takes the name of of the function about which we need help, the name may be in quotation marks; class names contain a hyphen and must be quoted
+
+- Instead of using say `help(help)`, we can shorten to the question mark operator: `?help`
+
+- Occasionally, several packages offer different functions with the same name, and we may be offered a choice; we can disambiguate by putting the package name and two colons before the function name
+
+### Function arguments
+
+- In the usage section, function arguments are shown by name and order; the `args()` function returns information
+
+- In general, if arguments are given by name, the order is arbitrary, but if names are not used at least sometimes, order matters
+
+- Some arguments do not have default values and are probably required, although some are guessed if missing
+
+- Being explicit about the names of arguments and the values they take is helpful in scripting and reproducible research
+
+- The ellipsis `...` indicates that the function itself examines objects passed to see what to do
+
+### Tooltips and completion
+
+- The regular R console does not provide tooltips, that is a bubble first offering alternative function or object names as you type, then lists of argument names
+
+- RStudio, like many IDEs, does provide this, controlled by Tools -> Global options -> Code -> Completion (by default it is operative)
+
+- This may be helpful or not, depending on your style of working; if you find it helpful, fine, if not, you can make it less invasive under Global options
+
+- Other IDE have also provided this facility, which builds directly on the usage sections of help pages of functions in installed packages
+
+### Coherence code/documentation
+
+- Base R has a set of checks and tests that ensure coherence between the code itself and the usage sections in help pages
+
+- These mechanisms are used in checking contributed packages before they are released through the the archive network; the description of arguments on help pages must match the function definition
+
+- It is also possible to generate help pages documenting functions automatically, for example using the **roxygen2** package
+
+- It is important to know that we can rely on this coherence
+
+
+### Returned values
+
+- The objects returned by functions are also documented on help pages, but the coherence of the description with reality is harder to check
+
+- This means that use of `str()` or other functions or methods may be helpful when we want to look inside the returned object
+
+- The form taken by returned values will often also vary, depending on the arguments given
+
+- Most help pages address this issue not by writing more about the returned values, but by using the examples section to highlight points of potential importance for the user
+
+### Examples
+
+- Reading the examples section on the help page is often enlightening, but we do not need to copy and paste
+
+- The `example()` function runs those parts of the code in the examples section of a function that are not tagged don't run --- this can be overridden, but may involve meeting conditions not met on your machine
+
+- This code is run nightly on CRAN servers on multiple operating systems and using released, patched and development versions of R, so checking both packages and the three versions of R
+
+- Some examples use data given verbatim, but many use built-in data sets; most packages also provide data sets to use for running examples
+
+### Built-in data sets
+
+- This means that the examples and the built-in data sets are a most significant resource for learning how to solve problems with R
+
+- Very often, one recognizes classic textbook data sets from the history of applied statistics; contemporary text book authors often publish collections of data sets as packages on CRAN
+
+- The built-in data sets also have help pages, describing their representation as R objects, and their licence and copyright status
+
+- These help pages also often include an examples section showing some of the analyses that may be carried out using them
+
+- One approach that typically works well when you have a data set of your own, but are unsure how to proceed, is to find a built-in data set that resembles the real one, and play with that first
+
+- The built-in data sets are often quite small, and if linked to text books, they are well described there as well as in the help pages
+
+- By definition, the built-in data sets do not have to be imported into R, as they are almost always stored as files of R objects
+
+- In some cases, these data sets are stored in external file formats, most often to show how to read those formats
+
+- The built-in data sets in the base **datasets** package are in the search path, but data sets in other packages should be loaded using the `data()` function
+
+
 ## Vectors, matrices and `data.frames`
 
 ### Simple vectors
