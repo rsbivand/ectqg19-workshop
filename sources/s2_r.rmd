@@ -5,7 +5,6 @@ date: "Thursday, 5 September 2019, 11:35-12:00"
 output:
   pdf_document: default
   html_document:
-    keep_md: yes
 link-citations: yes
 bibliography: rmd.bib
 ---

@@ -374,6 +374,96 @@ summary {
 <p>I am running R 3.6.1, with recent <code>update.packages()</code>.</p>
 <pre class="r"><code>needed &lt;- c(&quot;sf&quot;, &quot;stars&quot;, &quot;lwgeom&quot;)</code></pre>
 </div>
+<div id="help-examples-and-built-in-datasets-in-r" class="section level2">
+<h2>Help, examples and built-in datasets in R</h2>
+<ul>
+<li><p>In RStudio, the Help tab in the lower right pane (default position) gives access to the R manuals and to the installed packages help pages through the Packages link under Reference</p></li>
+<li><p>In R itself, help pages are available in HTML (browser) and text form; <code>help.start()</code> uses the default browser to display the Manuals, Reference and Miscellaneous Material sections in RStudio’s home help tab</p></li>
+<li><p>The search engine can be used to locate help pages, but is not great if many packages are installed, as no indices are stored</p></li>
+<li><p>The help system needs to be learned in order to provide the user with ways of progressing without wasting too much time</p></li>
+<li><p>The base help system does not tell you how to use R as a system, about packages not installed on your machine, or about R as a community</p></li>
+<li><p>It does provide information about functions, methods and (some) classes in base R and in contributed packages installed on your machine</p></li>
+<li><p>There are different requirements with regard to help systems — in R, the help pages of base R are expected to be accurate although terse</p></li>
+</ul>
+<div id="help-pages" class="section level3">
+<h3>Help pages</h3>
+<ul>
+<li><p>Each help page provides a short description of the functions, methods or classes it covers; some pages cover more than one such</p></li>
+<li><p>Help pages are grouped by package, so that the browser-based system is not easy to browse if you do not know which package a function belongs to</p></li>
+<li><p>The usage of the function is shown explicitly, including any defaults for arguments to functions or methods</p></li>
+<li><p>Each argument is described, showing names and types; in addition details of the description are given, together with the value returned</p></li>
+</ul>
+</div>
+<div id="interactive-use-of-help-pages" class="section level3">
+<h3>Interactive use of help pages</h3>
+<ul>
+<li><p>Rather than starting from the packages hierarchy of help pages, users most often use the <code>help()</code> function</p></li>
+<li><p>The function takes the name of of the function about which we need help, the name may be in quotation marks; class names contain a hyphen and must be quoted</p></li>
+<li><p>Instead of using say <code>help(help)</code>, we can shorten to the question mark operator: <code>?help</code></p></li>
+<li><p>Occasionally, several packages offer different functions with the same name, and we may be offered a choice; we can disambiguate by putting the package name and two colons before the function name</p></li>
+</ul>
+</div>
+<div id="function-arguments" class="section level3">
+<h3>Function arguments</h3>
+<ul>
+<li><p>In the usage section, function arguments are shown by name and order; the <code>args()</code> function returns information</p></li>
+<li><p>In general, if arguments are given by name, the order is arbitrary, but if names are not used at least sometimes, order matters</p></li>
+<li><p>Some arguments do not have default values and are probably required, although some are guessed if missing</p></li>
+<li><p>Being explicit about the names of arguments and the values they take is helpful in scripting and reproducible research</p></li>
+<li><p>The ellipsis <code>...</code> indicates that the function itself examines objects passed to see what to do</p></li>
+</ul>
+</div>
+<div id="tooltips-and-completion" class="section level3">
+<h3>Tooltips and completion</h3>
+<ul>
+<li><p>The regular R console does not provide tooltips, that is a bubble first offering alternative function or object names as you type, then lists of argument names</p></li>
+<li><p>RStudio, like many IDEs, does provide this, controlled by Tools -&gt; Global options -&gt; Code -&gt; Completion (by default it is operative)</p></li>
+<li><p>This may be helpful or not, depending on your style of working; if you find it helpful, fine, if not, you can make it less invasive under Global options</p></li>
+<li><p>Other IDE have also provided this facility, which builds directly on the usage sections of help pages of functions in installed packages</p></li>
+</ul>
+</div>
+<div id="coherence-codedocumentation" class="section level3">
+<h3>Coherence code/documentation</h3>
+<ul>
+<li><p>Base R has a set of checks and tests that ensure coherence between the code itself and the usage sections in help pages</p></li>
+<li><p>These mechanisms are used in checking contributed packages before they are released through the the archive network; the description of arguments on help pages must match the function definition</p></li>
+<li><p>It is also possible to generate help pages documenting functions automatically, for example using the <strong>roxygen2</strong> package</p></li>
+<li><p>It is important to know that we can rely on this coherence</p></li>
+</ul>
+</div>
+<div id="returned-values" class="section level3">
+<h3>Returned values</h3>
+<ul>
+<li><p>The objects returned by functions are also documented on help pages, but the coherence of the description with reality is harder to check</p></li>
+<li><p>This means that use of <code>str()</code> or other functions or methods may be helpful when we want to look inside the returned object</p></li>
+<li><p>The form taken by returned values will often also vary, depending on the arguments given</p></li>
+<li><p>Most help pages address this issue not by writing more about the returned values, but by using the examples section to highlight points of potential importance for the user</p></li>
+</ul>
+</div>
+<div id="examples" class="section level3">
+<h3>Examples</h3>
+<ul>
+<li><p>Reading the examples section on the help page is often enlightening, but we do not need to copy and paste</p></li>
+<li><p>The <code>example()</code> function runs those parts of the code in the examples section of a function that are not tagged don’t run — this can be overridden, but may involve meeting conditions not met on your machine</p></li>
+<li><p>This code is run nightly on CRAN servers on multiple operating systems and using released, patched and development versions of R, so checking both packages and the three versions of R</p></li>
+<li><p>Some examples use data given verbatim, but many use built-in data sets; most packages also provide data sets to use for running examples</p></li>
+</ul>
+</div>
+<div id="built-in-data-sets" class="section level3">
+<h3>Built-in data sets</h3>
+<ul>
+<li><p>This means that the examples and the built-in data sets are a most significant resource for learning how to solve problems with R</p></li>
+<li><p>Very often, one recognizes classic textbook data sets from the history of applied statistics; contemporary text book authors often publish collections of data sets as packages on CRAN</p></li>
+<li><p>The built-in data sets also have help pages, describing their representation as R objects, and their licence and copyright status</p></li>
+<li><p>These help pages also often include an examples section showing some of the analyses that may be carried out using them</p></li>
+<li><p>One approach that typically works well when you have a data set of your own, but are unsure how to proceed, is to find a built-in data set that resembles the real one, and play with that first</p></li>
+<li><p>The built-in data sets are often quite small, and if linked to text books, they are well described there as well as in the help pages</p></li>
+<li><p>By definition, the built-in data sets do not have to be imported into R, as they are almost always stored as files of R objects</p></li>
+<li><p>In some cases, these data sets are stored in external file formats, most often to show how to read those formats</p></li>
+<li><p>The built-in data sets in the base <strong>datasets</strong> package are in the search path, but data sets in other packages should be loaded using the <code>data()</code> function</p></li>
+</ul>
+</div>
+</div>
 <div id="vectors-matrices-and-data.frames" class="section level2">
 <h2>Vectors, matrices and <code>data.frames</code></h2>
 <div id="simple-vectors" class="section level3">
@@ -1137,7 +1227,7 @@ all.equal(trees_cnt, lux_tmerc$tree_count)</code></pre>
 <pre><code>## Loading required package: abind</code></pre>
 <pre class="r"><code>system.time(ghsl0 &lt;- read_stars(&quot;../data/ghsl.tiff&quot;, proxy=FALSE))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.005   0.000   0.005</code></pre>
+##   0.005   0.000   0.006</code></pre>
 <pre class="r"><code>ghsl0</code></pre>
 <pre><code>## stars object with 2 dimensions and 1 attribute
 ## attribute(s):
@@ -1170,14 +1260,14 @@ all.equal(trees_cnt, lux_tmerc$tree_count)</code></pre>
 <p>Using the aggregate method on the input raster in memory warped to the Luxembourg transverse Mercator projection, by the municipality boundaries in <code>lux_tmerc</code>, we can recover the population counts.</p>
 <pre class="r"><code>system.time(ghsl_sum0 &lt;- aggregate(st_warp(ghsl0, crs=2169, cellsize=250, use_gdal=FALSE), lux_tmerc, sum))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.765   0.018   0.787</code></pre>
+##   0.745   0.026   0.782</code></pre>
 <p>Using the proxy in this case takes about the same time:</p>
 <pre class="r"><code>system.time(ghsl_sum1 &lt;- aggregate(st_warp(ghsl1, crs=2169, cellsize=250, use_gdal=FALSE), lux_tmerc, sum))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.692   0.006   0.701</code></pre>
+##   0.671   0.002   0.683</code></pre>
 <pre class="r"><code>system.time(ghsl_sum2 &lt;- aggregate(ghsl0, st_transform(lux, crs=st_crs(ghsl0)$proj4string), sum))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.528   0.000   0.530</code></pre>
+##   0.512   0.004   0.522</code></pre>
 <p>The output values following warping are closely aligned with, but differ a little from those included in the vector object read to begin with; it looks as though the vector object was transformed to match the raster before aggregation:</p>
 <pre class="r"><code>summary(cbind(orig=lux_tmerc$ghsl_pop, warp=ghsl_sum0$ghsl.tiff, warp_proxy=ghsl_sum1$ghsl.tiff, moll=ghsl_sum2$ghsl.tiff))</code></pre>
 <pre><code>##       orig               warp          warp_proxy          moll         

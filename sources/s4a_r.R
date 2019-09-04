@@ -1,53 +1,27 @@
----
-title: 'R: Spatial regression'
-author: "Roger Bivand"
-date: "Thursday, 5 September 2019, 15:12-15:36"
-output:
-  pdf_document: default
-  html_document:
-link-citations: yes
-bibliography: rmd.bib
----
-
-### Required current contributed CRAN packages:
-
-I am running R 3.6.1, with recent `update.packages()`.
-
-```{r, echo=TRUE}
+## ---- echo=TRUE----------------------------------------------------------
 needed <- c("MatrixModels", "lme4", "spatialreg", "spdep", "sf", "sp", "HSAR")
-```
 
-### Beijing data set
 
-Lower level point support data and upper level district boundaries (polygon support)
-
-```{r}
+## ------------------------------------------------------------------------
 library(HSAR)
 library(sp)
 data(landSPDF)
 data(landprice)
 data(Beijingdistricts)
-```
 
 
-Convert to **sf** class and merge data with point geometries
-
-```{r}
+## ------------------------------------------------------------------------
 library(sf)
 land_sf <- st_as_sf(landSPDF)
 landprice_sf <- merge(land_sf, landprice, by="obs")
 (landprice_sf <- landprice_sf[order(landprice_sf$district.id.x),])
-```
 
-Check that the input IDs match and that the data are correctly  ordered
 
-```{r}
+## ------------------------------------------------------------------------
 all.equal(landprice_sf$district.id.x, landprice_sf$district.id.y)
-```
 
-Create the original 1.5 km distance threshold spatial weights, with a few no-neighbour observations (so set zero policy option)
 
-```{r, warning=FALSE}
+## ---- warning=FALSE------------------------------------------------------
 library(spatialreg)
 dnb1.5 <- spdep::dnearneigh(landprice_sf, 0, 1500, row.names=as.character(landprice_sf$obs))
 dnb1.5
@@ -57,11 +31,9 @@ ozpo <- spdep::set.ZeroPolicyOption(TRUE)
 oo <- set.ZeroPolicyOption(TRUE)
 lw <- spdep::nb2listw(dnb1.5, glist=edists, style="W")
 hist(spdep::card(dnb1.5))
-```
 
-Reconstruct the input data for R formula use (do not log in advance, do use factors for categorical variables to permit automatic generation of dummies)
 
-```{r}
+## ------------------------------------------------------------------------
 landprice_sf$fyear <- factor(landprice_sf$year + 2003)
 landprice_sf$price <- exp(landprice_sf$lnprice)
 landprice_sf$area <- exp(landprice_sf$lnarea)
@@ -71,206 +43,149 @@ landprice_sf$Dpark <- exp(landprice_sf$dpark)
 landprice_sf$Dele <- exp(landprice_sf$dele)
 landprice_sf$f_district.id <- factor(landprice_sf$district.id.x)
 (t1 <- table(table(landprice_sf$f_district.id)))
-```
 
-Some covariates are observed at the district level rather than the land parcel level
 
-```{r}
+## ------------------------------------------------------------------------
 sapply(as.data.frame(landprice_sf[, c("price", "area", "Dcbd", "Dele", "Dpark", "Dsubway", "crimerate", "popden")]), function(x) length(unique(x)))
-```
 
 
-Check the matching of district IDs and counts of land parcels in districts
-
-```{r}
+## ------------------------------------------------------------------------
 Beijingdistricts$id1 <- Beijingdistricts$id+1
 all.equal(unique(landprice_sf$district.id.x), Beijingdistricts$id1)
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 (Beijingdistricts_sf <- st_as_sf(Beijingdistricts))
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 Beijingdistricts_sf$counts <- sapply(st_contains(Beijingdistricts_sf, landprice_sf), length)
-```
 
 
-
-Check point counts by district from input data and topological points in polygon counts
-
-```{r}
+## ------------------------------------------------------------------------
 t2 <- table(Beijingdistricts_sf$counts)
 all.equal(t1, t2)
-```
 
 
-Basic formula object from the original paper and examples in package, fit and display OLS model (note that fyear is split into dummies with 2003 in the intercept)
-
-```{r}
+## ------------------------------------------------------------------------
 form <- log(price) ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + 
   crimerate + popden + fyear
 OLS <- lm(form, data=landprice_sf)
 summary(OLS)
-```
 
-Are the residuals spatially autocorrelated?
 
-```{r}
+## ------------------------------------------------------------------------
 spdep::lm.morantest(OLS, listw=lw)
-```
 
-What do the robust LM tests say? 
 
-```{r}
+## ------------------------------------------------------------------------
 spdep::lm.LMtests(OLS, listw=lw, test=c("RLMerr", "RLMlag"))
-```
 
-How dow we do with a linear model including selected spatially lagged covariates?
 
-```{r}
+## ------------------------------------------------------------------------
 SLX <- lmSLX(form, data=landprice_sf, listw=lw, Durbin= ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + crimerate + popden)
 summary(impacts(SLX))
-```
 
-And the spatial residual autocorrelation?
 
-```{r}
+## ------------------------------------------------------------------------
 spdep::lm.morantest(SLX, listw=lw)
-```
 
-And robust LM tests?
 
-```{r}
+## ------------------------------------------------------------------------
 spdep::lm.LMtests(SLX, listw=lw, test=c("RLMerr", "RLMlag"))
-```
 
-So let's fit a spatial Durbin error model, with the same selection of spatially lagged covariates
 
-```{r}
+## ------------------------------------------------------------------------
 e <- eigenw(lw)
 SDEM <- errorsarlm(form, data=landprice_sf, listw=lw, Durbin= ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + crimerate + popden, control=list(pre_eig=e))
 summary(impacts(SDEM))
-```
 
-The likelihood ratio test shows that the SDEM model fits much better than the SLX model
 
-```{r}
+## ------------------------------------------------------------------------
 LR1.sarlm(SDEM)
-```
-
-The Hausman test is perhaps significant, suggestion that the non-spatial coefficients shift somewhat between the SLX model and the SDEM model
 
 
-```{r}
+## ------------------------------------------------------------------------
 Hausman.test(SDEM)
-```
 
-But ...
 
-is this the end of the story? Reach out to very general mixed model IID random effects at the district level (fixed effects would give 111 dummies); here without spatially lagged covariates
-
-```{r}
+## ------------------------------------------------------------------------
 library(lme4)
 mlm_1 <- lmer(update(form, . ~ . + (1 | f_district.id)), data=landprice_sf, REML=FALSE)
 Beijingdistricts_sf$mlm_re <- ranef(mlm_1)[[1]][,1]
-```
 
-The **HSAR** model gives a spatial error model at the district level, defining a sparse matrix `Delta` assigning parcels to districts
 
-```{r}
+## ------------------------------------------------------------------------
 library(Matrix)
 suppressMessages(library(MatrixModels))
 Delta <- as(model.Matrix(~ -1 + f_district.id, data=landprice_sf, sparse=TRUE), "dgCMatrix")
-```
 
-There are gaps in the land parcel and district coverage
 
-```{r}
+## ------------------------------------------------------------------------
 library(mapview)
 mapview(Beijingdistricts_sf)
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 opar <- par(bg="lightgreen")
 plot(Beijingdistricts_sf[, "counts"])
 par(opar)
-```
 
-Construct the spatial weights for the disticts
 
-```{r, warning=FALSE, message=FALSE}
+## ---- warning=FALSE, message=FALSE---------------------------------------
 nb_M <- spdep::poly2nb(Beijingdistricts, queen=FALSE, row.names=as.character(Beijingdistricts$id1))
 M <- as(spdep::nb2listw(nb_M, style="B"), "CsparseMatrix")
 dim(M)
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 hist(spdep::card(nb_M))
-```
 
-Using the `M` sparse spatial weights matrix, fit a model with district level simultaneous error autoregression; without spatially lagged covariates
 
-```{r, warning=FALSE}
+## ---- warning=FALSE------------------------------------------------------
 m_hsar <- hsar(form, data=landprice_sf, W=NULL, M=M, Delta=Delta, burnin=500, Nsim=5000, thinning=1)
 Beijingdistricts_sf$hsar_re <- m_hsar$Mus[1,]
-```
 
-The IID and SAR random effects are rather similar
 
-```{r}
+## ------------------------------------------------------------------------
 plot(Beijingdistricts_sf[,"mlm_re"])
-```
 
 
-```{r}
+## ------------------------------------------------------------------------
 plot(Beijingdistricts_sf[,"hsar_re"])
-```
 
-We do not have tests for residual autocorrelation for these fitted multilevel models, so (speculatively) let's copy out the district level random effects to the parcels, checking first for matching
 
-```{r}
+## ------------------------------------------------------------------------
 o <- match(landprice_sf$district.id.x, Beijingdistricts_sf$id1)
 landprice_sf$id1 <- Beijingdistricts_sf$id1[o]
 all.equal(landprice_sf$district.id.x, landprice_sf$id1)
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 landprice_sf$mlm_re <- Beijingdistricts_sf$mlm_re[o]
 landprice_sf$hsar_re <- Beijingdistricts_sf$hsar_re[o]
-```
 
-Now we can refit the SLX model but including the district level IID random effect, and test the residual autocorrelation
 
-```{r}
+## ------------------------------------------------------------------------
 spdep::lm.morantest(lmSLX(update(form, . ~ . + mlm_re), data=landprice_sf, listw=lw, Durbin= ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + crimerate + popden), listw=lw)
-```
 
 
-and for the spatially structured random effect
-
-```{r}
+## ------------------------------------------------------------------------
 spdep::lm.morantest(lmSLX(update(form, . ~ . + hsar_re), data=landprice_sf, listw=lw, Durbin= ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + crimerate + popden), listw=lw)
-```
 
-Next fit SDEM models with the IID random effect, and it turns out that the SLX model does almost as well, so maybe most of the residual autocorrelation was at the district level rather than the parcel level?
 
-```{r}
+## ------------------------------------------------------------------------
 SDEM1 <- errorsarlm(update(form, . ~ . + mlm_re), data=landprice_sf, listw=lw, Durbin= ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + crimerate + popden, control=list(pre_eig=e))
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 LR1.sarlm(SDEM1)
-```
 
-The SSRE doesn't do as well (perhaps because it oversmooths the districts)
 
-```{r}
+## ------------------------------------------------------------------------
 SDEM2 <- errorsarlm(update(form, . ~ . + hsar_re), data=landprice_sf, listw=lw, Durbin= ~ log(area) + log(Dcbd) + log(Dele) + log(Dpark) + log(Dsubway) + crimerate + popden, control=list(pre_eig=e))
-```
 
-```{r}
+
+## ------------------------------------------------------------------------
 LR1.sarlm(SDEM2)
-```
 
-Isn't spatial regression fun!!

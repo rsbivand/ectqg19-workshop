@@ -186,3 +186,27 @@ To install Python and required libraries through this approach, please follow th
         When this completes, it will create a `.html` file in the same folder that you can inspect. If no error messages are present, the installation was successful!
 
 ## R
+
+Best option for binary installs on all platforms (installing natively onto your laptops):
+
+Install R from: [Windows](https://cran.r-project.org/bin/windows/); [OSX](https://cran.r-project.org/bin/macosx/); [Linux by flavours](https://cran.r-project.org/bin/linux/) unless not already installed. Consider first choosing a mirror such as 0-cloud from https://cran.r-project.org/mirrors.html first, and then navigating to Software -> R Binaries in the left navigation bar.
+
+If you wish, install [RStudio Desktop](https://www.rstudio.com/products/rstudio/download/) - not essential.
+
+Start R (or the R console in RStudio) and install packages as specified at the head of the s*_r.html packages from the command line with `install.packages()` if necessary. A complete list of these packages will also be posted here. If your R installation is up to date (you ran `update.packages()` recently), you may already have some or most of the required packages installed.
+
+An incomplete list and installation script as of 00:00, 4 September, is:
+
+```
+update.packages() # to update installed but stale packages
+PACKAGES <- c("sf", "stars", "sp", "classInt", "raster", "colorspace",
+ "RColorBrewer", "ggplot2", "cartography", "tmap", "mapview", "lwgeom",
+ "spdep", "spatialreg", "MatrixModels", "lme4", "HSAR")
+inst <- match(PACKAGES, .packages(all=TRUE))
+need <- which(is.na(inst)) # see what is not yet installed and
+if (length(need) > 0) install.packages(PACKAGES[need]) # install from chosen mirror
+```
+
+Experienced Linux users may choose to install R from source on their own responsibility; on Linux contributed packages are most often installed from source, so build trains will be needed for these as well, and external dependences must be provided (for example to install the **sf** package, see (https://github.com/r-spatial/sf/blob/master/README.md))
+
+Binary installs of RStudio and R can be removed cleanly without difficulty if need be after the workshop.
