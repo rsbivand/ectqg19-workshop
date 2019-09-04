@@ -3,8 +3,8 @@ title: 'R: Spatial autocorrelation'
 author: "Roger Bivand"
 date: "Thursday, 5 September 2019, 14:15-14:30"
 output:
-  pdf_document: default
   html_document:
+  pdf_document: default
 link-citations: yes
 bibliography: rmd.bib
 ---
@@ -77,6 +77,7 @@ The Moran scatterplot shows the by observation relationship between the observed
 ```{r}
 moran.plot(lux$light_level, listw=lw_W)
 ```
+
 But maybe this autocorrelation is rather driven by a missing covariate in the mean model. The basic test is of a mean model including only the intercept, the mean of the variable being tested. If we include a relevant covariate such here as population density with a similar spatial footprint to the variable of interest, conclusions may change
 
 ```{r}
