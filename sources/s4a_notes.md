@@ -1,6 +1,6 @@
 # Spatial Regression
 
-### Spatial error model
+## Spatial error model
 
 In trying to model these spatial processes, we may choose to model the spatial autocorrelation in the residual with a spatial error model (SEM). 
 
@@ -53,10 +53,10 @@ Although making predictions for new locations for which covariates are observed 
 
 The consequence of these interactions is that a unit change in a covariate will only impact the response as the value of the regression coefficient if the spatial coefficient of the lagged response is zero. Where it is non-zero, global spillovers, impacts, come into play, and these impacts should be reported rather than the regression coefficients. Local impacts may be reported for SDEM and SLX models, using linear combination to calculate standard errors for the total impacts of each covariate (sums of coefficients on the covariates and their spatial lags).
 
+## References
 
-
-[SDSR](https://keen-swartz-3146c4.netlify.com/spatial-regression.html)
-[JSS: Bivand and Piras, 2015](https://doi.org/10.18637/jss.v063.i18)
-[JSS: Bivand et al., 2017](https://doi.org/10.1016/j.spasta.2017.01.002)
-
+- [SDSR](https://keen-swartz-3146c4.netlify.com/spatial-regression.html)
+- [JSS: Bivand and Piras, 2015](https://doi.org/10.18637/jss.v063.i18)
+- [JSS: Bivand et al., 2017](https://doi.org/10.1016/j.spasta.2017.01.002)
+- [GDS Book, intro to spatial regression](https://geographicdata.science/book/notebooks/11_regression.html)
 
