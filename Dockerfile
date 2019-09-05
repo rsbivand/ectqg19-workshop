@@ -7,7 +7,7 @@ RUN R -e "install.packages(c( \
 		'spatialreg', \
 		'MatrixModels', \
 		'HSAR' \
-		), repos='http://cran.rstudio.com');"
+		), repos='https://cran.rstudio.com');"
 USER $NB_UID
 
 COPY ./pack.zip ${HOME}/pack.zip
