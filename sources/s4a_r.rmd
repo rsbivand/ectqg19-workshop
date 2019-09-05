@@ -3,8 +3,8 @@ title: 'R: Spatial regression'
 author: "Roger Bivand"
 date: "Thursday, 5 September 2019, 15:12-15:36"
 output:
-  pdf_document: default
   html_document:
+  pdf_document: default
 link-citations: yes
 bibliography: rmd.bib
 ---
@@ -57,6 +57,7 @@ ozpo <- spdep::set.ZeroPolicyOption(TRUE)
 oo <- set.ZeroPolicyOption(TRUE)
 lw <- spdep::nb2listw(dnb1.5, glist=edists, style="W")
 hist(spdep::card(dnb1.5))
+# spdep::write.sn2gwt(spdep::listw2sn(lw), "../data/gavins_listw.gwt")
 ```
 
 Reconstruct the input data for R formula use (do not log in advance, do use factors for categorical variables to permit automatic generation of dummies)
