@@ -1,5 +1,9 @@
 FROM darribas/gds:3.0
 
+USER root
+RUN R -e "install.packages(c( 'stars', 'cartography', 'spatialreg', 'MatrixModels', 'HSAR'), repos='https://cran.rstudio.com');"
+USER $NB_UID
+
 COPY ./pack.zip ${HOME}/pack.zip
 RUN unzip ${HOME}/pack.zip \
  && mv pack work \
