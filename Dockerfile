@@ -6,7 +6,7 @@ RUN R -e "install.packages(c( \
 		'cartography', \
 		'spatialreg', \
 		'MatrixModels', \
-		'HSAR'
+		'HSAR' \
 		), repos='http://cran.rstudio.com');"
 USER $NB_UID
 
